@@ -3,7 +3,7 @@ FFProc
 
 These two scripts allow you to transcode massive media libraries to H.264/AAC/MP4.
 
-*BACK UP/COPY YOUR MEDIA BEFORE RUNNING THIS*. I haven't had any problem running this on my 2TB media library, but I can't guarantee this will hold true for you as well.
+**BACK UP/COPY YOUR MEDIA BEFORE RUNNING THIS**. I haven't had any problem running this on my 2TB media library, but I can't guarantee this will hold true for you as well.
 
 Requirements
 ----
@@ -16,7 +16,7 @@ Requirements
 ----
 This script needs to be run for every file in your library. I'd reccommend running `find /your/media/from/root -exec python2 ffproc.py {} \;` to do this. 
 
-This script will put everything into an [RQ](http://python-rq.org/) queue. This allows you to enqueue all of your files, and run workers whenever it's convinient. 
+This script will put everything into an [RQ](http://python-rq.org/) queue. This allows you to enqueue all of your files in a persistant way, and run workers whenever it's convinient. 
 
 The script is fairly well commented.
 

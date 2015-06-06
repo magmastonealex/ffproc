@@ -8,9 +8,9 @@ These two scripts allow you to transcode massive media libraries to H.264/AAC/MP
 Requirements
 ----
 
-	- You need a Redis server setup to listen on localhost.
-	- You need `rq`,`redis` modules installed for python2.
-	- You need `ffmpeg` installed with the libfdk_aac codec. This sounds exponentially better than the builtin aac codec at all bitrates, and supports a VBR mode.
+ - You need a Redis server setup to listen on localhost.
+ - You need `rq`,`redis` modules installed for python2.
+ - You need `ffmpeg` installed with the libfdk_aac codec. This sounds exponentially better than the builtin aac codec at all bitrates, and supports a VBR mode.
 
 `ffproc.py`
 ----

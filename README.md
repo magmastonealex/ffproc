@@ -25,4 +25,3 @@ The script is fairly well commented.
 This file isn't run directly. Instead, once you've enqueued your media, run `rqworker mux-core audio-core video-core`. This will run the worker which will transcode all of your media, replacing it with MP4s.
 
 
-Everything in this repo is licenced under CC BY-NC-SA 4.0.

@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 import sys
+#comment these two lines if you don't want to queue.
 from rq import Connection, Queue
 from redis import Redis
 
@@ -189,7 +190,7 @@ job={}
 job["path"]=fil
 job["opts"]=ffmpeg
 
-redis_conn = Redis()
+
 
 head,tail=os.path.split(fil)
 
@@ -199,8 +200,20 @@ if fil[-4:]==".mpg": # These are usually OTA recordings, which are in 1080i.
 	ffmpeg.append("-vf")
 	ffmpeg.append("yadif=0:-1:0")
 
-# enqueue the file.
+#uncomment these next few lines if you want to just run ffmpeg.
 
+#res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+["out.mp4"])
+#if res != 0:
+#	print "FFMPEG WENT BAD!"
+#else:
+#	shutil.move("out.mp4",job["path"]+".mp4")
+#	shutil.remove(job["path"])
+# exit()
+
+#Delete the rest of the file if you don't want to enqueue.
+
+# enqueue the file.
+redis_conn = Redis()
 if video==0 and audio==0:
 	if fil[-4:]!=".mp4":
 		q = Queue('mux-core',connection=redis_conn)

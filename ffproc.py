@@ -185,7 +185,8 @@ for stream in streams_final:
 			numaudio=numaudio+1
 		else:
 			print "Unknown codec:"+stream["newcodec"]
-
+ffmpeg.append("-movflags")
+ffmpeg.append("faststart")
 job={}
 job["path"]=fil
 job["opts"]=ffmpeg

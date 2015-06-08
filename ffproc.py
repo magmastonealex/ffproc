@@ -29,6 +29,7 @@ streams_audio=[]
 #A counter to see how "good" the file is. If it's 3, then we don't need to do anything to the file.
 good=0
 streams_final=[]
+subs_streams=[]
 for stream in out:
 	curstream={}
 	if stream['codec_type']=='audio':
@@ -74,6 +75,8 @@ for stream in out:
 		else:
 			curstream["newcodec"]="h264"
 		streams_final.append(curstream)
+	elif stream["codec_type"]=="subtitle":
+		subs_streams.append(stream["index"])
 if good==3:
 	sys.exit(0)
 
@@ -201,7 +204,15 @@ if fil[-4:]==".mpg": # These are usually OTA recordings, which are in 1080i.
 	ffmpeg.append("-vf")
 	ffmpeg.append("yadif=0:-1:0")
 
+if len(subs_streams) > 0:
+	ffmpeg.append("-scodec")
+	ffmpeg.append("mov_text")
+	for stream in subs_streams:
+		ffmpeg.append("-map")
+		ffmpeg.append("0:"+str(stream))
+
 #uncomment these next few lines if you want to just run ffmpeg.
+
 
 #res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+["out.mp4"])
 #if res != 0:

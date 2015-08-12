@@ -156,6 +156,10 @@ for stream in streams_final:
 		elif stream["newcodec"]=="h264":
 			ffmpeg.append("-c:v")
 			ffmpeg.append("libx264")
+			ffmpeg.append("-crf")
+                        ffmpeg.append("20")
+                        ffmpeg.append("-level:v")
+                        ffmpeg.append("4.0")
 			ffmpeg.append("-preset")
 			ffmpeg.append(preset)
 		else: 

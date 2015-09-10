@@ -38,6 +38,8 @@ for stream in out:
 			curstream["type"]="audio"
 			curstream["codec"]=stream["codec_name"]
 			curstream["index"]=stream["index"]
+			if "channel_layout" not in stream.keys():
+				stream["channel_layout"]="stereo"
 			curstream["channel_layout"]=stream["channel_layout"]
 			if stream["channels"] >= 5:
 				curstream["channel_layout"]="surround"

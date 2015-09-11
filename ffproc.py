@@ -19,11 +19,11 @@ vidstr=0
 filesto=[]
 fil=sys.argv[1]
 
-print fil
+print(fil)
 
 # Run FFProbe to get all of the available streams for any given file.
 out=json.loads(subprocess.Popen(["/usr/bin/ffprobe","-v", "quiet", "-print_format", "json", "-show_format", "-show_streams",fil], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0])["streams"]
-print out # Print that
+print(out) # Print that
 streams_audio=[]
 
 #A counter to see how "good" the file is. If it's 3, then we don't need to do anything to the file.
@@ -38,7 +38,7 @@ for stream in out:
 			curstream["type"]="audio"
 			curstream["codec"]=stream["codec_name"]
 			curstream["index"]=stream["index"]
-			if "channel_layout" not in stream.keys():
+			if "channel_layout" not in list(stream.keys()):
 				stream["channel_layout"]="stereo"
 			curstream["channel_layout"]=stream["channel_layout"]
 			if stream["channels"] >= 5:
@@ -165,7 +165,7 @@ for stream in streams_final:
 			ffmpeg.append("-preset")
 			ffmpeg.append(preset)
 		else: 
-			print "Unknown codec:"+stream["newcodec"]
+			print("Unknown codec:"+stream["newcodec"])
 			sys.exit(1)
 	elif stream["type"]=="audio":
 		if stream["newcodec"]=="aac":
@@ -193,7 +193,7 @@ for stream in streams_final:
 			ffmpeg.append("copy")
 			numaudio=numaudio+1
 		else:
-			print "Unknown codec:"+stream["newcodec"]
+			print("Unknown codec:"+stream["newcodec"])
 ffmpeg.append("-movflags")
 ffmpeg.append("faststart")
 job={}
@@ -206,7 +206,7 @@ head,tail=os.path.split(fil)
 
 
 if fil[-4:]==".mpg": # These are usually OTA recordings, which are in 1080i.
-	print "Deinterlacing!"
+	print("Deinterlacing!")
 	ffmpeg.append("-vf")
 	ffmpeg.append("yadif=0:-1:0")
 
@@ -237,13 +237,13 @@ if video==0 and audio==0:
 		q = Queue('mux-core',connection=redis_conn)
 		job["opts"]=["-acodec","copy","-vcodec","copy"]
 		q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
-		print 'Enqueued: '+ fil+" for Remux"+str(job)		
+		print('Enqueued: '+ fil+" for Remux"+str(job))
 
 if video==1:
 	q = Queue('video-core',connection=redis_conn)
 	q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
-	print 'Enqueued: '+ fil+" for Video"+str(job)
+	print('Enqueued: '+ fil+" for Video"+str(job))
 elif audio!=0:
 	q = Queue('audio-core',connection=redis_conn)
 	q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
-	print 'Enqueued: '+ fil+" for Audio"+str(job)
+	print('Enqueued: '+ fil+" for Audio"+str(job))

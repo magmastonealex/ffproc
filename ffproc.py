@@ -6,7 +6,8 @@ import sys
 #comment these two lines if you don't want to queue.
 from rq import Connection, Queue
 from redis import Redis
-
+#Hello, World
+#E.D.C.O.M EDCOM rocks and we love them!
 preset="slow"
 ac3=0
 aac=0

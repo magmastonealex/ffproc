@@ -160,11 +160,17 @@ for stream in streams_final:
 			ffmpeg.append("-c:v")
 			ffmpeg.append("libx264")
 			ffmpeg.append("-crf")
-			ffmpeg.append("20")
+			ffmpeg.append("20") #adjust this up/down depending on your percieved quality. 
 			ffmpeg.append("-level:v")
-			ffmpeg.append("4.0")
+			ffmpeg.append("4.1")
 			ffmpeg.append("-preset")
 			ffmpeg.append(preset)
+			ffmpeg.append("-bf") # these slow down encoding, but reduce file size pretty significantly.
+			ffmpeg.append("16")
+			ffmpeg.append("-b_strategy")
+			ffmpeg.append("2")
+			ffmpeg.append("-subq")
+			ffmpeg.append("10")
 		else: 
 			print("Unknown codec:"+stream["newcodec"])
 			sys.exit(1)
@@ -206,7 +212,7 @@ job["opts"]=ffmpeg
 head,tail=os.path.split(fil)
 
 
-if fil[-4:]==".mpg": # These are usually OTA recordings, which are in 1080i.
+if fil[-4:]==".mpg" or file[-4:]==".vob": # These are usually OTA  recordings or DVD rips, which are in 1080i. There isn't a good way to test this. 
 	print("Deinterlacing!")
 	ffmpeg.append("-vf")
 	ffmpeg.append("yadif=0:-1:0")

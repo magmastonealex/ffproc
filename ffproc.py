@@ -212,7 +212,7 @@ job["opts"]=ffmpeg
 head,tail=os.path.split(fil)
 
 
-if fil[-4:]==".mpg" or file[-4:]==".vob": # These are usually OTA  recordings or DVD rips, which are in 1080i. There isn't a good way to test this. 
+if fil[-4:]==".mpg" or fil[-4:]==".vob": # These are usually OTA  recordings or DVD rips, which are in 1080i. There isn't a good way to test this. 
 	print("Deinterlacing!")
 	ffmpeg.append("-vf")
 	ffmpeg.append("yadif=0:-1:0")

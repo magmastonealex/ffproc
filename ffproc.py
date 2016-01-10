@@ -229,10 +229,10 @@ if len(subs_streams) > 0:
 
 #res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+["out.mp4"])
 #if res != 0:
-#	print "FFMPEG WENT BAD!"
+#	print "FFMPEG FAILURE!"
 #else:
 #	shutil.move("out.mp4",job["path"]+".mp4")
-#	shutil.remove(job["path"])
+#	os.remove(job["path"])
 # exit()
 
 #Delete the rest of the file if you don't want to enqueue.

@@ -5,6 +5,7 @@ import subprocess
 import sys
 import re		
 import fnmatch
+import time
 #comment these two lines if you don't want to queue.
 #from rq import Connection, Queue
 #from redis import Redis
@@ -228,8 +229,8 @@ if len(subs_streams) > 0:
 
 #uncomment these next few lines if you want to just run ffmpeg.
 
-
-res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+["out.mp4"])
+output=os.path.expanduser('~')+"/"+time.strftime("%H.%M.%S")+".mp4"
+res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+[output])
 if res != 0:
 	print "FFMPEG FAILURE!"
 else:

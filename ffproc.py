@@ -3,6 +3,8 @@ import json
 import os
 import subprocess
 import sys
+import re		
+import fnmatch
 #comment these two lines if you don't want to queue.
 from rq import Connection, Queue
 from redis import Redis
@@ -227,12 +229,16 @@ if len(subs_streams) > 0:
 #uncomment these next few lines if you want to just run ffmpeg.
 
 
-#res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+["out.mp4"])
+res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+["out.mp4"])
 #if res != 0:
 #	print "FFMPEG FAILURE!"
 #else:
-#	shutil.move("out.mp4",job["path"]+".mp4")
-#	os.remove(job["path"])
+#	extension = os.path.splitext(job["path"])[1]
+#	newname = re.sub("(?i)xvid","H264",job["path"])		
+#	newname = re.sub(extension,".mp4",newname)
+#	shutil.move("out.mp4",newname)
+#	if fnmatch.fnmatchcase(job["path"],newname)==False:
+#		os.remove(job["path"])
 # exit()
 
 #Delete the rest of the file if you don't want to enqueue.

@@ -23,11 +23,13 @@ vidstr=0
 filesto=[]
 fil=sys.argv[1]
 
+print "#################################################################"
 print(fil)
+print
 
 # Run FFProbe to get all of the available streams for any given file.
 out=json.loads(subprocess.Popen(["ffprobe","-v", "quiet", "-print_format", "json", "-show_format", "-show_streams",fil], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0])["streams"]
-print(out) # Print that
+#print(out) # Print that
 streams_audio=[]
 
 #A counter to see how "good" the file is. If it's 3, then we don't need to do anything to the file.
@@ -206,6 +208,7 @@ for stream in streams_final:
 			print("Unknown codec:"+stream["newcodec"])
 ffmpeg.append("-movflags")
 ffmpeg.append("faststart")
+ffmpeg.append("-hide_banner")
 job={}
 job["path"]=fil
 job["opts"]=ffmpeg
@@ -230,6 +233,9 @@ if len(subs_streams) > 0:
 #uncomment these next few lines if you want to just run ffmpeg.
 
 output=os.path.expanduser('~')+"/"+time.strftime("%H.%M.%S")+".mp4"
+print "Starting ffmpeg with this command:"
+print "ffmpeg -i", job["path"], job["opts"], output
+print
 res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+[output])
 if res != 0:
 	print "FFMPEG FAILURE!"
@@ -237,8 +243,13 @@ else:
 	extension = os.path.splitext(job["path"])[1]
 	newname = re.sub("(?i)xvid","H264",job["path"])		
 	newname = re.sub(extension,".mp4",newname)
-	shutil.move("out.mp4",newname)
+	print
+	print "Moving", output, "to", newname
+	print
+	shutil.move(output,newname)
 	if fnmatch.fnmatchcase(job["path"],newname)==False:
+		print "Deleting",job["path"]
+		print
 		os.remove(job["path"])
 exit()
 

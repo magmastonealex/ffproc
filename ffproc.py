@@ -3,14 +3,14 @@ import json
 import os
 import subprocess
 import sys
-import re		
+import re
 import fnmatch
 import time
 #comment these two lines if you don't want to queue.
 #from rq import Connection, Queue
 #from redis import Redis
 preset="slow"
-#adjust this depending on your percieved quality. 0=lossless, 18=Visually Lossless, 23=default,     51=worst possible. The range is exponential, so increasing the CRF value +6 is roughly half the     bitrate while -6 is roughly twice the bitrate
+#adjust this depending on your percieved quality. 0=lossless, 18=Visually Lossless, 23=default, 51=worst possible. The range is exponential, so increasing the CRF value +6 is roughly half the bitrate while -6 is roughly twice the bitrate
 crf="22"
 ac3=0
 aac=0
@@ -165,7 +165,7 @@ for stream in streams_final:
 			ffmpeg.append("-c:v")
 			ffmpeg.append("libx264")
 			ffmpeg.append("-crf")
-			ffmpeg.append(crf) 
+			ffmpeg.append(crf)
 			ffmpeg.append("-level:v")
 			ffmpeg.append("4.1")
 			ffmpeg.append("-preset")
@@ -209,14 +209,12 @@ for stream in streams_final:
 ffmpeg.append("-movflags")
 ffmpeg.append("faststart")
 ffmpeg.append("-hide_banner")
+
 job={}
 job["path"]=fil
 job["opts"]=ffmpeg
 
-
-
 head,tail=os.path.split(fil)
-
 
 if fil[-4:]==".mpg" or fil[-4:]==".vob": # These are usually OTA  recordings or DVD rips, which are in 1080i. There isn't a good way to test this. 
 	print("Deinterlacing!")

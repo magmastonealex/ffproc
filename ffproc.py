@@ -25,7 +25,7 @@ fil=sys.argv[1]
 print(fil)
 
 # Run FFProbe to get all of the available streams for any given file.
-out=json.loads(subprocess.Popen(["/usr/bin/ffprobe","-v", "quiet", "-print_format", "json", "-show_format", "-show_streams",fil], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0])["streams"]
+out=json.loads(subprocess.Popen(["ffprobe","-v", "quiet", "-print_format", "json", "-show_format", "-show_streams",fil], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0])["streams"]
 print(out) # Print that
 streams_audio=[]
 

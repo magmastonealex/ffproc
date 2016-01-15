@@ -239,7 +239,7 @@ res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+["out.mp4"])
 #	shutil.move("out.mp4",newname)
 #	if fnmatch.fnmatchcase(job["path"],newname)==False:
 #		os.remove(job["path"])
-# exit()
+#exit()
 
 #Delete the rest of the file if you don't want to enqueue.
 

@@ -229,7 +229,7 @@ if len(subs_streams) > 0:
 #uncomment these next few lines if you want to just run ffmpeg.
 
 
-res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+["out.mp4"])
+#res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+["out.mp4"])
 #if res != 0:
 #	print "FFMPEG FAILURE!"
 #else:

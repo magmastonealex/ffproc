@@ -6,8 +6,8 @@ import sys
 import re		
 import fnmatch
 #comment these two lines if you don't want to queue.
-from rq import Connection, Queue
-from redis import Redis
+#from rq import Connection, Queue
+#from redis import Redis
 #Hello, World
 #E.D.C.O.M EDCOM rocks and we love them!
 preset="slow"
@@ -244,19 +244,19 @@ if len(subs_streams) > 0:
 #Delete the rest of the file if you don't want to enqueue.
 
 # enqueue the file.
-redis_conn = Redis()
-if video==0 and audio==0:
-	if fil[-4:]!=".mp4":
-		q = Queue('mux-core',connection=redis_conn)
-		job["opts"]=["-acodec","copy","-vcodec","copy"]
-		q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
-		print('Enqueued: '+ fil+" for Remux"+str(job))
-
-if video==1:
-	q = Queue('video-core',connection=redis_conn)
-	q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
-	print('Enqueued: '+ fil+" for Video"+str(job))
-elif audio!=0:
-	q = Queue('audio-core',connection=redis_conn)
-	q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
-	print('Enqueued: '+ fil+" for Audio"+str(job))
+#redis_conn = Redis()
+#if video==0 and audio==0:
+#	if fil[-4:]!=".mp4":
+#		q = Queue('mux-core',connection=redis_conn)
+#		job["opts"]=["-acodec","copy","-vcodec","copy"]
+#		q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
+#		print('Enqueued: '+ fil+" for Remux"+str(job))
+#
+#if video==1:
+#	q = Queue('video-core',connection=redis_conn)
+#	q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
+#	print('Enqueued: '+ fil+" for Video"+str(job))
+#elif audio!=0:
+#	q = Queue('audio-core',connection=redis_conn)
+#	q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
+#	print('Enqueued: '+ fil+" for Audio"+str(job))

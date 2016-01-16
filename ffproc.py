@@ -229,23 +229,22 @@ if len(subs_streams) > 0:
 		ffmpeg.append("0:"+str(stream))
 
 #uncomment these next few lines if you want to just run ffmpeg.
-
-output=os.path.expanduser('~')+"/"+"ffmpeg.temp."+time.strftime("%H.%M.%S")+".mp4"
+output=os.path.expanduser('~')+"/"+"ffmpeg.tmp."+time.strftime("%H.%M.")+os.path.splitext(tail)[0]+".mp4"
 print "Starting ffmpeg with this command:"
-print "ffmpeg -i", job["path"], job["opts"], output
+print "ffmpeg -i", job["path"], " ".join(job["opts"]), output
 print
 res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+[output])
 if res != 0:
 	print "FFMPEG FAILURE!"
 else:
 	extension = os.path.splitext(job["path"])[1]
-	newname = re.sub("(?i)xvid","x264",job["path"])		
-	newname = re.sub(extension,".mp4",newname)
+	pathout = re.sub("(?i)xvid","x264",job["path"])		
+	pathout = re.sub(extension,".mp4",pathout)
 	print
-	print "Moving", output, "to", newname
+	print "Moving", output, "to", pathout
 	print
-	shutil.move(output,newname)
-	if fnmatch.fnmatchcase(job["path"],newname)==False:
+	shutil.move(output,pathout)
+	if fnmatch.fnmatchcase(job["path"],pathout)==False:
 		print "Deleting",job["path"]
 		print
 		os.remove(job["path"])

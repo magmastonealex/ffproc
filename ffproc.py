@@ -239,7 +239,7 @@ if res != 0:
 	print "FFMPEG FAILURE!"
 else:
 	extension = os.path.splitext(job["path"])[1]
-	newname = re.sub("(?i)xvid","H264",job["path"])		
+	newname = re.sub("(?i)xvid","x264",job["path"])		
 	newname = re.sub(extension,".mp4",newname)
 	print
 	print "Moving", output, "to", newname

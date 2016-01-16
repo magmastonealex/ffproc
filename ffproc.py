@@ -11,7 +11,7 @@ import time
 #from redis import Redis
 preset="slow"
 #adjust this depending on your percieved quality. 0=lossless, 18=Visually Lossless, 23=default, 51=worst possible. The range is exponential, so increasing the CRF value +6 is roughly half the bitrate while -6 is roughly twice the bitrate
-crf="22"
+crf="23"
 ac3=0
 aac=0
 vid=0
@@ -230,7 +230,7 @@ if len(subs_streams) > 0:
 
 #uncomment these next few lines if you want to just run ffmpeg.
 
-output=os.path.expanduser('~')+"/"+time.strftime("%H.%M.%S")+".mp4"
+output=os.path.expanduser('~')+"/"+"ffmpeg.temp."+time.strftime("%H.%M.%S")+".mp4"
 print "Starting ffmpeg with this command:"
 print "ffmpeg -i", job["path"], job["opts"], output
 print

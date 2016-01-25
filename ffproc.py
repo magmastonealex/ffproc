@@ -11,7 +11,7 @@ import time
 #from redis import Redis
 preset="slow"
 #adjust this depending on your percieved quality. 0=lossless, 18=Visually Lossless, 23=default, 51=worst possible. The range is exponential, so increasing the CRF value +6 is roughly half the bitrate while -6 is roughly twice the bitrate
-crf="23"
+crf="22"
 ac3=0
 aac=0
 vid=0
@@ -241,11 +241,11 @@ else:
 	pathout = re.sub("(?i)xvid","x264",job["path"])		
 	pathout = re.sub(extension,".mp4",pathout)
 	print
-	print "Moving", output, "to", pathout
+	print "Moving '", output,"'", "to","'", pathout,"'"
 	print
 	shutil.move(output,pathout)
 	if fnmatch.fnmatchcase(job["path"],pathout)==False:
-		print "Deleting",job["path"]
+		print "Deleting '",job["path"],"'"
 		print
 		os.remove(job["path"])
 exit()

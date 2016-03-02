@@ -6,7 +6,13 @@ import sys
 import re
 import fnmatch
 import time
-#comment these two lines if you don't want to queue.
+
+# USAGE
+# python2 ~/ffproc/ffproc.py /PATH/TO/MEDIA/FILE.MP4
+#   OR
+# find /your/media/from/root -exec python2 ~/ffproc/ffproc.py {} \;
+
+# uncomment these two lines if you want to queue.
 #from rq import Connection, Queue
 #from redis import Redis
 preset="slow"
@@ -86,6 +92,9 @@ for stream in out:
 	elif stream["codec_type"]=="subtitle":
 		subs_streams.append(stream["index"])
 if good==3:
+	print "Conversion not needed."
+	print "'", fil, "' is Chromecast compatible."
+	print
 	sys.exit(0)
 
 
@@ -229,11 +238,21 @@ if len(subs_streams) > 0:
 		ffmpeg.append("0:"+str(stream))
 
 #uncomment these next few lines if you want to just run ffmpeg.
+
+# make temp file in home directory with a unique name
 output=os.path.expanduser('~')+"/"+"ffmpeg.tmp."+time.strftime("%H.%M.")+os.path.splitext(tail)[0]+".mp4"
+
 print "Starting ffmpeg with this command:"
 print "ffmpeg -i", job["path"], " ".join(job["opts"]), output
 print
-res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+[output])
+
+# start the ffmpeg conversion
+try:
+	res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+[output])
+except KeyboardInterrupt:
+	# Ctrl-C was pressed
+	sys.exit()
+
 if res != 0:
 	print "FFMPEG FAILURE!"
 else:
@@ -243,7 +262,19 @@ else:
 	print
 	print "Moving '", output,"'", "to","'", pathout,"'"
 	print
+
+	# wait 3 seconds incase it needs to be canceled with Ctrl-C
+	try:
+		time.sleep(3)
+	except KeyboardInterrupt:
+		print " Canceling move" # Ctrl-C was pressed
+		print
+		sys.exit()
+
+	# move the temp file to the original location
 	shutil.move(output,pathout)
+
+	# check if new name and old name are different, if yes, then delete old file
 	if fnmatch.fnmatchcase(job["path"],pathout)==False:
 		print "Deleting '",job["path"],"'"
 		print

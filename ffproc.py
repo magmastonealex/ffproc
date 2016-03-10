@@ -7,6 +7,13 @@ import re
 import fnmatch
 import time
 
+def sizeof_fmt(num, suffix='B'):
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
+
 # USAGE
 # python2 ~/ffproc/ffproc.py /PATH/TO/MEDIA/FILE.MP4
 #   OR
@@ -17,7 +24,7 @@ import time
 #from redis import Redis
 preset="slow"
 #adjust this depending on your percieved quality. 0=lossless, 18=Visually Lossless, 23=default, 51=worst possible. The range is exponential, so increasing the CRF value +6 is roughly half the bitrate while -6 is roughly twice the bitrate
-crf="22"
+crf="21"
 ac3=0
 aac=0
 vid=0
@@ -259,7 +266,6 @@ else:
 	extension = os.path.splitext(job["path"])[1]
 	pathout = re.sub("(?i)xvid","x264",job["path"])		
 	pathout = re.sub(extension,".mp4",pathout)
-	print
 	print "Moving '", output,"'", "to","'", pathout,"'"
 	print
 
@@ -270,10 +276,18 @@ else:
 		print " Canceling move" # Ctrl-C was pressed
 		print
 		sys.exit()
+	
+	# write files sizes to log
+	log=os.path.expanduser('~')+"/"+"convertedFFMPEG.log"
+	f1=open(log, 'a+')
+	print >> f1, "Before", sizeof_fmt(os.path.getsize(fil)), fil
 
 	# move the temp file to the original location
 	shutil.move(output,pathout)
 
+	print >> f1, "After ", sizeof_fmt(os.path.getsize(pathout)), pathout
+	f1.close()
+	
 	# check if new name and old name are different, if yes, then delete old file
 	if fnmatch.fnmatchcase(job["path"],pathout)==False:
 		print "Deleting '",job["path"],"'"

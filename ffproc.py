@@ -24,7 +24,7 @@ def sizeof_fmt(num, suffix='B'):
 #from redis import Redis
 preset="slow"
 #adjust this depending on your percieved quality. 0=lossless, 18=Visually Lossless, 23=default, 51=worst possible. The range is exponential, so increasing the CRF value +6 is roughly half the bitrate while -6 is roughly twice the bitrate
-crf="21"
+crf="22"
 ac3=0
 aac=0
 vid=0
@@ -278,14 +278,49 @@ else:
 		sys.exit()
 	
 	# write files sizes to log
-	log=os.path.expanduser('~')+"/"+"convertedFFMPEG.log"
+	log=os.path.expanduser('~')+"/"+"ffproc.log"
 	f1=open(log, 'a+')
-	print >> f1, "Before", sizeof_fmt(os.path.getsize(fil)), fil
+	print >> f1, ""
+	print >> f1, "Before", sizeof_fmt(os.path.getsize(fil)), os.path.basename(fil)
 
 	# move the temp file to the original location
 	shutil.move(output,pathout)
 
-	print >> f1, "After ", sizeof_fmt(os.path.getsize(pathout)), pathout
+	print >> f1, "After ", sizeof_fmt(os.path.getsize(pathout)), os.path.basename(pathout)
+	
+	# find how much was saved or lost
+	diff = os.path.getsize(fil) - os.path.getsize(pathout)
+	if diff > 0:
+		print >> f1, "Saved",sizeof_fmt(diff)
+	else:
+		absdiff=abs(diff)
+		print >> f1, "Lost",sizeof_fmt(absdiff)
+
+	# find the total saved
+	totalLog=os.path.expanduser('~')+"/"+".totalSavedFFPROC.log"
+	if os.path.isfile(totalLog):
+		# get the total saved so far
+		f2=open(totalLog, 'r')
+		total=int(f2.read())
+		f2.close()
+		# add this difference to the total
+		f2=open(totalLog, 'w+')
+		total=str(diff + total)
+		f2.write(total)
+		f2.close()
+		if int(total) > 0:
+			print >> f1, sizeof_fmt(int(total)),"Saved All Together"
+		else:
+			print >> f1, sizeof_fmt(int(total)),"Lost All Together"
+	else:
+		# make this difference the total
+		f2=open(totalLog, 'w+')
+		f2.write(str(diff))
+		f2.close()
+		if diff > 0:
+			print >> f1, sizeof_fmt(diff),"Saved All Together"
+		else:
+			print >> f1, sizeof_fmt(diff),"Lost All Together"
 	f1.close()
 	
 	# check if new name and old name are different, if yes, then delete old file

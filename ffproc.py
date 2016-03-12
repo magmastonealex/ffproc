@@ -291,10 +291,10 @@ else:
 	# find how much was saved or lost
 	diff = os.path.getsize(fil) - os.path.getsize(pathout)
 	if diff > 0:
-		print >> f1, "Saved",sizeof_fmt(diff)
+		print >> f1, sizeof_fmt(diff), "Saved"
 	else:
 		absdiff=abs(diff)
-		print >> f1, "Lost",sizeof_fmt(absdiff)
+		print >> f1, sizeof_fmt(absdiff), "Lost"
 
 	# find the total saved
 	totalLog=os.path.expanduser('~')+"/"+".totalSavedFFPROC.log"

@@ -231,9 +231,7 @@ job={}
 job["path"]=fil
 job["opts"]=ffmpeg
 
-head,tail=os.path.split(fil)
-
-if fil[-4:]==".mpg" or fil[-4:]==".vob": # These are usually OTA  recordings or DVD rips, which are in 1080i. There isn't a good way to test this. 
+if fil[-4:]==".mpg" or fil[-4:]==".vob": # These are usually OTA recordings or DVD rips, which are in 1080i. There isn't a good way to test this. 
 	print("Deinterlacing!")
 	ffmpeg.append("-vf")
 	ffmpeg.append("yadif=0:-1:0")
@@ -248,6 +246,7 @@ if len(subs_streams) > 0:
 #uncomment these next few lines if you want to just run ffmpeg.
 
 # make temp file in home directory with a unique name
+tail=os.path.split(fil)[1]
 output=os.path.expanduser('~')+"/"+"ffmpeg.tmp."+time.strftime("%H.%M.")+os.path.splitext(tail)[0]+".mp4"
 
 print "Starting ffmpeg with this command:"
@@ -271,8 +270,8 @@ if res != 0:
 	print "FFMPEG FAILURE!"
 else:
 	# replace xvid with x264 and the extention with mp4
-	extension = os.path.splitext(job["path"])[1]
-	pathout = re.sub("(?i)xvid","x264",job["path"])		
+	extension = os.path.splitext(fil)[1]
+	pathout = re.sub("(?i)xvid","x264",fil)		
 	pathout = re.sub(extension,".mp4",pathout)
 	print "Moving '", output,"'", "to","'", pathout,"'"
 	print
@@ -349,10 +348,10 @@ else:
 	f1.close()
 	
 	# delete old file if new name and old name are different
-	if fnmatch.fnmatchcase(job["path"],pathout)==False:
-		print "Deleting '",job["path"],"'"
+	if fnmatch.fnmatchcase(fil,pathout)==False:
+		print "Deleting '",fil,"'"
 		print
-		os.remove(job["path"])
+		os.remove(fil)
 exit()
 
 #Delete the rest of the file if you don't want to enqueue.

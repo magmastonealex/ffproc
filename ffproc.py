@@ -6,6 +6,7 @@ import sys
 import re
 import fnmatch
 import time
+import math
 
 def sizeof_fmt(num, suffix='B'):
     for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
@@ -250,8 +251,11 @@ if len(subs_streams) > 0:
 output=os.path.expanduser('~')+"/"+"ffmpeg.tmp."+time.strftime("%H.%M.")+os.path.splitext(tail)[0]+".mp4"
 
 print "Starting ffmpeg with this command:"
-print "ffmpeg -i", job["path"], " ".join(job["opts"]), output
+print "ffmpeg -i", fil, " ".join(ffmpeg), output
 print
+
+# the time conversion starts
+elapsed_time = time.time()
 
 # start the ffmpeg conversion
 try:
@@ -260,9 +264,13 @@ except KeyboardInterrupt:
 	# Ctrl-C was pressed
 	sys.exit()
 
+# the time conversion stops
+elapsed_time = time.time() - elapsed_time
+
 if res != 0:
 	print "FFMPEG FAILURE!"
 else:
+	# replace xvid with x264 and the extention with mp4
 	extension = os.path.splitext(job["path"])[1]
 	pathout = re.sub("(?i)xvid","x264",job["path"])		
 	pathout = re.sub(extension,".mp4",pathout)
@@ -281,20 +289,23 @@ else:
 	log=os.path.expanduser('~')+"/"+"ffproc.log"
 	f1=open(log, 'a+')
 	print >> f1, ""
-	print >> f1, "Before", sizeof_fmt(os.path.getsize(fil)), os.path.basename(fil)
+	print >> f1, "Before", sizeof_fmt(os.path.getsize(fil)), "|", os.path.basename(fil)
 
+	# find how much HD space was saved or lost
+	diff = os.path.getsize(fil)
+	
 	# move the temp file to the original location
 	shutil.move(output,pathout)
 
-	print >> f1, "After ", sizeof_fmt(os.path.getsize(pathout)), os.path.basename(pathout)
-	
-	# find how much was saved or lost
-	diff = os.path.getsize(fil) - os.path.getsize(pathout)
-	if diff > 0:
-		print >> f1, sizeof_fmt(diff), "Saved"
+	print >> f1, "After ", sizeof_fmt(os.path.getsize(pathout)), "|", os.path.basename(pathout)
+		
+	# print HD space to log
+	diff = diff - os.path.getsize(pathout)
+	if diff >= 0:
+		print >> f1, sizeof_fmt(diff), "Saved and",
 	else:
 		absdiff=abs(diff)
-		print >> f1, sizeof_fmt(absdiff), "Lost"
+		print >> f1, sizeof_fmt(absdiff), "Lost and",
 
 	# find the total saved
 	totalLog=os.path.expanduser('~')+"/"+".totalSavedFFPROC.log"
@@ -303,17 +314,18 @@ else:
 		f2=open(totalLog, 'r')
 		total=int(f2.read())
 		f2.close()
-		# add this difference to the total
+		# add this file's difference to the total
 		f2=open(totalLog, 'w+')
 		total=str(diff + total)
 		f2.write(total)
 		f2.close()
-		if int(total) > 0:
+		# print that to the log
+		if int(total) >= 0:
 			print >> f1, sizeof_fmt(int(total)),"Saved All Together"
 		else:
 			print >> f1, sizeof_fmt(int(total)),"Lost All Together"
 	else:
-		# make this difference the total
+		# make this file's difference the total
 		f2=open(totalLog, 'w+')
 		f2.write(str(diff))
 		f2.close()
@@ -321,9 +333,22 @@ else:
 			print >> f1, sizeof_fmt(diff),"Saved All Together"
 		else:
 			print >> f1, sizeof_fmt(diff),"Lost All Together"
+
+	# find how much time elapsed
+	if elapsed_time >= 3600:
+		hours, minutes = divmod(elapsed_time, 3600)
+		minutes, seconds = divmod(minutes, 60)
+		elapsed_time =  math.trunc(hours), "h ", math.trunc(minutes), "m ", math.trunc(round(seconds)), "s"
+	else:
+		minutes, seconds = divmod(elapsed_time, 60)
+		elapsed_time = math.trunc(minutes), "m ", math.trunc(round(seconds)), "s"
+
+	# print time elapsed to log
+	print >> f1, ''.join(str(x) for x in elapsed_time), "elapsed"
+
 	f1.close()
 	
-	# check if new name and old name are different, if yes, then delete old file
+	# delete old file if new name and old name are different
 	if fnmatch.fnmatchcase(job["path"],pathout)==False:
 		print "Deleting '",job["path"],"'"
 		print

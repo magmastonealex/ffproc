@@ -273,6 +273,7 @@ else:
 	extension = os.path.splitext(fil)[1]
 	pathout = re.sub("(?i)xvid","x264",fil)		
 	pathout = re.sub(extension,".mp4",pathout)
+	print
 	print "Moving '", output,"'", "to","'", pathout,"'"
 	print
 
@@ -290,48 +291,94 @@ else:
 	print >> f1, ""
 	print >> f1, "Before", sizeof_fmt(os.path.getsize(fil)), "|", os.path.basename(fil)
 
-	# find how much HD space was saved or lost
-	diff = os.path.getsize(fil)
+	# get original file's size before it is deleted
+	filsize = os.path.getsize(fil)
 	
 	# move the temp file to the original location
 	shutil.move(output,pathout)
 
 	print >> f1, "After ", sizeof_fmt(os.path.getsize(pathout)), "|", os.path.basename(pathout)
-		
-	# print HD space to log
-	diff = diff - os.path.getsize(pathout)
+
+	# print HD space saved/lost to log and get percentage saved
+	diff = filsize - os.path.getsize(pathout)
+	percent = math.trunc(float(diff) / filsize * 100)
 	if diff >= 0:
-		print >> f1, sizeof_fmt(diff), "Saved and",
+		print >> f1, sizeof_fmt(diff), "(%" + str(percent) + ") Saved and",
 	else:
-		absdiff=abs(diff)
-		print >> f1, sizeof_fmt(absdiff), "Lost and",
+		print >> f1, sizeof_fmt(abs(diff)), "(%" + str(abs(percent)) + ") Lost and",
 
 	# find the total saved
-	totalLog=os.path.expanduser('~')+"/"+".totalSavedFFPROC.log"
-	if os.path.isfile(totalLog):
+	totalSavedLog=os.path.expanduser('~')+"/"+".totalSavedFFPROC.log"
+	if os.path.isfile(totalSavedLog):
 		# get the total saved so far
-		f2=open(totalLog, 'r')
-		total=int(f2.read())
+		f2=open(totalSavedLog, 'r')
+		totalsaved=int(f2.read())
 		f2.close()
 		# add this file's difference to the total
-		f2=open(totalLog, 'w+')
-		total=str(diff + total)
-		f2.write(total)
+		f2=open(totalSavedLog, 'w+')
+		totalsaved=str(diff + totalsaved)
+		f2.write(totalsaved)
 		f2.close()
-		# print that to the log
-		if int(total) >= 0:
-			print >> f1, sizeof_fmt(int(total)),"Saved All Together"
-		else:
-			print >> f1, sizeof_fmt(int(total)),"Lost All Together"
 	else:
 		# make this file's difference the total
-		f2=open(totalLog, 'w+')
-		f2.write(str(diff))
+		f2=open(totalSavedLog, 'w+')
+		totalsaved=str(diff)
+		f2.write(totalsaved)
 		f2.close()
-		if diff > 0:
-			print >> f1, sizeof_fmt(diff),"Saved All Together"
-		else:
-			print >> f1, sizeof_fmt(diff),"Lost All Together"
+
+	# print total saved
+	if int(totalsaved) >= 0:
+		print >> f1, sizeof_fmt(int(totalsaved)),
+	else:
+		print >> f1, sizeof_fmt(int(totalsaved)),
+
+    # find total size of pre-conversion files (to find percentage saved)
+	totalPreConvLog=os.path.expanduser('~')+"/"+".totalPreConvertedFFPROC.log"
+	if os.path.isfile(totalPreConvLog):
+		# get total size pre-converted so far
+		f3=open(totalPreConvLog, 'r')
+		totalPreConv=int(f3.read())
+		f3.close()
+		# add original file's size to the total
+		f3=open(totalPreConvLog, 'w+')
+		totalPreConv=str(filsize + totalPreConv)
+		f3.write(totalPreConv)
+		f3.close()
+	else:
+		# make this file's size the total
+		totalPreConv=str(filsize)
+		f3=open(totalPreConvLog, 'w+')
+		f3.write(totalPreConv)
+		f3.close()
+
+	# find total size of post-conversion files (to find percentage saved)
+	totalPostConvLog=os.path.expanduser('~')+"/"+".totalPostConvertedFFPROC.log"
+	if os.path.isfile(totalPostConvLog):
+		# get total size post-converted so far
+		f4=open(totalPostConvLog, 'r')
+		totalPostConv=int(f4.read())
+		f4.close()
+		# add coverted file's size to the total
+		f4=open(totalPostConvLog, 'w+')
+		totalPostConv=str(os.path.getsize(pathout) + totalPostConv)
+		f4.write(totalPostConv)
+		f4.close
+	else:
+		# make this converted file's size the total
+		totalPostConv=str(os.path.getsize(pathout))
+		f4=open(totalPostConvLog, 'w+')
+		f4.write(totalPostConv)
+		f4.close()
+
+	# get percentage saved/lost
+	diffTotal = int(totalPreConv) - int(totalPostConv)
+	percentTotal = math.trunc(float(diffTotal) / int(totalPreConv) * 100)
+
+	# print total HD space percentage saved/lost to log
+	if diffTotal >= 0:
+		print >> f1, "(%" + str(percentTotal) + ") Saved All Together"
+	else:
+		print >> f1, "(%" + str(abs(percentTotal)) + ") Lost All Together"
 
 	# find how much time elapsed
 	if elapsed_time >= 3600:
@@ -343,7 +390,7 @@ else:
 		elapsed_time = math.trunc(minutes), "m ", math.trunc(round(seconds)), "s"
 
 	# print time elapsed to log
-	print >> f1, ''.join(str(x) for x in elapsed_time), "elapsed"
+	print >> f1, ''.join(str(x) for x in elapsed_time), "Elapsed"
 
 	f1.close()
 	

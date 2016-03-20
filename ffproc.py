@@ -3,12 +3,29 @@ import json
 import os
 import subprocess
 import sys
-#comment these two lines if you don't want to queue.
-from rq import Connection, Queue
-from redis import Redis
-#Hello, World
-#E.D.C.O.M EDCOM rocks and we love them!
+import re
+import fnmatch
+import time
+import math
+
+def sizeof_fmt(num, suffix='B'):
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
+
+# USAGE
+# python2 ~/ffproc/ffproc.py /PATH/TO/MEDIA/FILE.MP4
+#   OR
+# find /your/media/from/root -exec python2 ~/ffproc/ffproc.py {} \;
+
+# uncomment these two lines if you want to queue.
+#from rq import Connection, Queue
+#from redis import Redis
 preset="slow"
+#adjust this depending on your percieved quality. 0=lossless, 18=Visually Lossless, 23=default, 51=worst possible. The range is exponential, so increasing the CRF value +6 is roughly half the bitrate while -6 is roughly twice the bitrate
+crf="22"
 ac3=0
 aac=0
 vid=0
@@ -20,11 +37,13 @@ vidstr=0
 filesto=[]
 fil=sys.argv[1]
 
+print "#################################################################"
 print(fil)
+print
 
 # Run FFProbe to get all of the available streams for any given file.
-out=json.loads(subprocess.Popen(["/usr/bin/ffprobe","-v", "quiet", "-print_format", "json", "-show_format", "-show_streams",fil], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0])["streams"]
-print(out) # Print that
+out=json.loads(subprocess.Popen(["ffprobe","-v", "quiet", "-print_format", "json", "-show_format", "-show_streams",fil], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0])["streams"]
+#print(out) # Print that
 streams_audio=[]
 
 #A counter to see how "good" the file is. If it's 3, then we don't need to do anything to the file.
@@ -81,6 +100,9 @@ for stream in out:
 	elif stream["codec_type"]=="subtitle":
 		subs_streams.append(stream["index"])
 if good==3:
+	print "Conversion not needed."
+	print "'", fil, "' is Chromecast compatible."
+	print
 	sys.exit(0)
 
 
@@ -160,7 +182,7 @@ for stream in streams_final:
 			ffmpeg.append("-c:v")
 			ffmpeg.append("libx264")
 			ffmpeg.append("-crf")
-			ffmpeg.append("20") #adjust this up/down depending on your percieved quality. 
+			ffmpeg.append(crf)
 			ffmpeg.append("-level:v")
 			ffmpeg.append("4.1")
 			ffmpeg.append("-preset")
@@ -203,16 +225,13 @@ for stream in streams_final:
 			print("Unknown codec:"+stream["newcodec"])
 ffmpeg.append("-movflags")
 ffmpeg.append("faststart")
+ffmpeg.append("-hide_banner")
+
 job={}
 job["path"]=fil
 job["opts"]=ffmpeg
 
-
-
-head,tail=os.path.split(fil)
-
-
-if fil[-4:]==".mpg" or fil[-4:]==".vob": # These are usually OTA  recordings or DVD rips, which are in 1080i. There isn't a good way to test this. 
+if fil[-4:]==".mpg" or fil[-4:]==".vob": # These are usually OTA recordings or DVD rips, which are in 1080i. There isn't a good way to test this. 
 	print("Deinterlacing!")
 	ffmpeg.append("-vf")
 	ffmpeg.append("yadif=0:-1:0")
@@ -226,31 +245,178 @@ if len(subs_streams) > 0:
 
 #uncomment these next few lines if you want to just run ffmpeg.
 
+# make temp file in home directory with a unique name
+tail=os.path.split(fil)[1]
+output=os.path.expanduser('~')+"/"+"ffmpeg.tmp."+time.strftime("%H.%M.")+os.path.splitext(tail)[0]+".mp4"
 
-#res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+["out.mp4"])
-#if res != 0:
-#	print "FFMPEG FAILURE!"
-#else:
-#	shutil.move("out.mp4",job["path"]+".mp4")
-#	os.remove(job["path"])
-# exit()
+print "Starting ffmpeg with this command:"
+print "ffmpeg -i", fil, " ".join(ffmpeg), output
+print
+
+# the time conversion starts
+elapsed_time = time.time()
+
+# start the ffmpeg conversion
+try:
+	res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+[output])
+except KeyboardInterrupt:
+	# Ctrl-C was pressed
+	sys.exit()
+
+# the time conversion stops
+elapsed_time = time.time() - elapsed_time
+
+if res != 0:
+	print "FFMPEG FAILURE!"
+else:
+	# replace xvid with x264 and the extention with mp4
+	extension = os.path.splitext(fil)[1]
+	pathout = re.sub("(?i)xvid","x264",fil)		
+	pathout = re.sub(extension,".mp4",pathout)
+	print
+	print "Moving '", output,"'", "to","'", pathout,"'"
+	print
+
+	# wait 3 seconds incase it needs to be canceled with Ctrl-C
+	try:
+		time.sleep(3)
+	except KeyboardInterrupt:
+		print " Canceling move" # Ctrl-C was pressed
+		print
+		sys.exit()
+	
+	# write files sizes to log
+	log=os.path.expanduser('~')+"/"+"ffproc.log"
+	f1=open(log, 'a+')
+	print >> f1, ""
+	print >> f1, "Before", sizeof_fmt(os.path.getsize(fil)), "|", os.path.basename(fil)
+
+	# get original file's size before it is deleted
+	filsize = os.path.getsize(fil)
+	
+	# move the temp file to the original location
+	shutil.move(output,pathout)
+
+	print >> f1, "After ", sizeof_fmt(os.path.getsize(pathout)), "|", os.path.basename(pathout)
+
+	# print HD space saved/lost to log and get percentage saved
+	diff = filsize - os.path.getsize(pathout)
+	percent = math.trunc(float(diff) / filsize * 100)
+	if diff >= 0:
+		print >> f1, sizeof_fmt(diff), "(%" + str(percent) + ") Saved and",
+	else:
+		print >> f1, sizeof_fmt(abs(diff)), "(%" + str(abs(percent)) + ") Lost and",
+
+	# find the total saved
+	totalSavedLog=os.path.expanduser('~')+"/"+".totalSavedFFPROC.log"
+	if os.path.isfile(totalSavedLog):
+		# get the total saved so far
+		f2=open(totalSavedLog, 'r')
+		totalsaved=int(f2.read())
+		f2.close()
+		# add this file's difference to the total
+		f2=open(totalSavedLog, 'w+')
+		totalsaved=str(diff + totalsaved)
+		f2.write(totalsaved)
+		f2.close()
+	else:
+		# make this file's difference the total
+		f2=open(totalSavedLog, 'w+')
+		totalsaved=str(diff)
+		f2.write(totalsaved)
+		f2.close()
+
+	# print total saved
+	if int(totalsaved) >= 0:
+		print >> f1, sizeof_fmt(int(totalsaved)),
+	else:
+		print >> f1, sizeof_fmt(int(totalsaved)),
+
+    # find total size of pre-conversion files (to find percentage saved)
+	totalPreConvLog=os.path.expanduser('~')+"/"+".totalPreConvertedFFPROC.log"
+	if os.path.isfile(totalPreConvLog):
+		# get total size pre-converted so far
+		f3=open(totalPreConvLog, 'r')
+		totalPreConv=int(f3.read())
+		f3.close()
+		# add original file's size to the total
+		f3=open(totalPreConvLog, 'w+')
+		totalPreConv=str(filsize + totalPreConv)
+		f3.write(totalPreConv)
+		f3.close()
+	else:
+		# make this file's size the total
+		totalPreConv=str(filsize)
+		f3=open(totalPreConvLog, 'w+')
+		f3.write(totalPreConv)
+		f3.close()
+
+	# find total size of post-conversion files (to find percentage saved)
+	totalPostConvLog=os.path.expanduser('~')+"/"+".totalPostConvertedFFPROC.log"
+	if os.path.isfile(totalPostConvLog):
+		# get total size post-converted so far
+		f4=open(totalPostConvLog, 'r')
+		totalPostConv=int(f4.read())
+		f4.close()
+		# add coverted file's size to the total
+		f4=open(totalPostConvLog, 'w+')
+		totalPostConv=str(os.path.getsize(pathout) + totalPostConv)
+		f4.write(totalPostConv)
+		f4.close
+	else:
+		# make this converted file's size the total
+		totalPostConv=str(os.path.getsize(pathout))
+		f4=open(totalPostConvLog, 'w+')
+		f4.write(totalPostConv)
+		f4.close()
+
+	# get percentage saved/lost
+	diffTotal = int(totalPreConv) - int(totalPostConv)
+	percentTotal = math.trunc(float(diffTotal) / int(totalPreConv) * 100)
+
+	# print total HD space percentage saved/lost to log
+	if diffTotal >= 0:
+		print >> f1, "(%" + str(percentTotal) + ") Saved All Together"
+	else:
+		print >> f1, "(%" + str(abs(percentTotal)) + ") Lost All Together"
+
+	# find how much time elapsed
+	if elapsed_time >= 3600:
+		hours, minutes = divmod(elapsed_time, 3600)
+		minutes, seconds = divmod(minutes, 60)
+		elapsed_time =  math.trunc(hours), "h ", math.trunc(minutes), "m ", math.trunc(round(seconds)), "s"
+	else:
+		minutes, seconds = divmod(elapsed_time, 60)
+		elapsed_time = math.trunc(minutes), "m ", math.trunc(round(seconds)), "s"
+
+	# print time elapsed to log
+	print >> f1, ''.join(str(x) for x in elapsed_time), "Elapsed"
+
+	f1.close()
+	
+	# delete old file if new name and old name are different
+	if fnmatch.fnmatchcase(fil,pathout)==False:
+		print "Deleting '",fil,"'"
+		print
+		os.remove(fil)
+exit()
 
 #Delete the rest of the file if you don't want to enqueue.
 
 # enqueue the file.
-redis_conn = Redis()
-if video==0 and audio==0:
-	if fil[-4:]!=".mp4":
-		q = Queue('mux-core',connection=redis_conn)
-		job["opts"]=["-acodec","copy","-vcodec","copy"]
-		q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
-		print('Enqueued: '+ fil+" for Remux"+str(job))
-
-if video==1:
-	q = Queue('video-core',connection=redis_conn)
-	q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
-	print('Enqueued: '+ fil+" for Video"+str(job))
-elif audio!=0:
-	q = Queue('audio-core',connection=redis_conn)
-	q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
-	print('Enqueued: '+ fil+" for Audio"+str(job))
+#redis_conn = Redis()
+#if video==0 and audio==0:
+#	if fil[-4:]!=".mp4":
+#		q = Queue('mux-core',connection=redis_conn)
+#		job["opts"]=["-acodec","copy","-vcodec","copy"]
+#		q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
+#		print('Enqueued: '+ fil+" for Remux"+str(job))
+#
+#if video==1:
+#	q = Queue('video-core',connection=redis_conn)
+#	q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
+#	print('Enqueued: '+ fil+" for Video"+str(job))
+#elif audio!=0:
+#	q = Queue('audio-core',connection=redis_conn)
+#	q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
+#	print('Enqueued: '+ fil+" for Audio"+str(job))

@@ -1,6 +1,8 @@
 FFProc
 ====
 
+*This project is currently undergoing a ground-up-rewrite. This version of the code works perfectly fine, but I have some ideas and plans to improve it pretty significantly. Check back in the near future!*
+
 These two scripts allow you to transcode massive media libraries to H.264/AAC/MP4.
 
 **BACK UP/COPY YOUR MEDIA BEFORE RUNNING THIS**. I haven't had any problem running this on my 2TB media library, but I can't guarantee this will hold true for you as well.

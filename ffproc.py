@@ -2,13 +2,9 @@ import shutil
 import json
 import os
 import subprocess
+import uuid
 import sys
-#comment these two lines if you don't want to queue.
-from rq import Connection, Queue
-from redis import Redis
-#Hello, World
-#E.D.C.O.M EDCOM rocks and we love them!
-preset="slow"
+preset="veryslow"
 ac3=0
 aac=0
 vid=0
@@ -20,28 +16,31 @@ vidstr=0
 filesto=[]
 fil=sys.argv[1]
 
-print(fil)
+#print "---"
+print fil
+#sys.exit(0)
 
-# Run FFProbe to get all of the available streams for any given file.
 out=json.loads(subprocess.Popen(["/usr/bin/ffprobe","-v", "quiet", "-print_format", "json", "-show_format", "-show_streams",fil], stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0])["streams"]
-print(out) # Print that
+print out
 streams_audio=[]
-
-#A counter to see how "good" the file is. If it's 3, then we don't need to do anything to the file.
+#print fil
+#exit()
 good=0
 streams_final=[]
 subs_streams=[]
+subs_fd = []
+
 for stream in out:
 	curstream={}
 	if stream['codec_type']=='audio':
-		if stream["codec_name"]=="ac3" or stream["codec_name"]=="dts" or stream["codec_name"]=="dca": # check for high quality/special codecs.
-#																										This check is more complicated than it needs to be because some DVDs are really, really strange.
+		print stream["codec_name"]
+		if stream["codec_name"]=="ac3" or stream["codec_name"]=="dts" or stream["codec_name"]=="dca":
+			print "special"
 			curstream["type"]="audio"
 			curstream["codec"]=stream["codec_name"]
 			curstream["index"]=stream["index"]
-			if "channel_layout" not in list(stream.keys()):
-				stream["channel_layout"]="stereo"
 			curstream["channel_layout"]=stream["channel_layout"]
+			print stream
 			if stream["channels"] >= 5:
 				curstream["channel_layout"]="surround"
 				curstream["newcodec"]="copy"
@@ -55,7 +54,7 @@ for stream in out:
 			curstream["codec"]=stream["codec_name"]
 			curstream["index"]=stream["index"]
 			curstream["channel_layout"]=stream["channel_layout"]
-			if stream["channels"] == 6: # Surround AAC is strange, but oddly common in the warez scene.
+			if stream["channels"] == 6:
 				curstream["channel_layout"]="surround"
 				curstream["newcodec"]="aac"
 				curstream["channels"]="2"
@@ -69,39 +68,66 @@ for stream in out:
 			curstream["codec"]=stream["codec_name"]
 			curstream["channel_layout"]=stream["channels"]
 		streams_audio.append(curstream)
-	elif stream["codec_type"]=="video": # Don't care unless it's already h.264.
+	elif stream["codec_type"]=="video":
+		
 		curstream["type"]="video"
 		curstream["index"]=stream['index']
-		if stream['codec_name']=="h264":
+		if stream['codec_name']=="mjpeg":
+			continue
+		elif stream['codec_name']=="h264":
 			curstream["newcodec"]= "copy"
 			good=good+1
 		else:
 			curstream["newcodec"]="h264"
 		streams_final.append(curstream)
 	elif stream["codec_type"]=="subtitle":
-		subs_streams.append(stream["index"])
-if good==3:
-	sys.exit(0)
+		lang=""
+		try:
+			lang=stream["tags"]["LANGUAGE"]
+		except:
+			try:
+				lang=stream["tags"]["language"]
+			except:
+				try:
+					check = stream["tags"]["title"]
+					if check.lower().find("eng") > -1:
+						lang="eng"
+				except:
+					continue
+		if lang=="eng":
+			try:
+				#print stream["tags"]["title"]
+				if stream["tags"]["title"]=="Foriegn Dialog" or stream["tags"]["title"]=="F.D." or stream["tags"]["title"]=="FORCED":
+					subs_fd.append([stream['index'],stream["codec_name"] ])
+				else:
+					subs_streams.append([stream['index'],stream["codec_name"] ])
+			except:
+				print "Adding as regular stream"
+				subs_streams.append([stream['index'],stream["codec_name"] ])
 
+if good==3:
+	#print "All good."
+	sys.exit(0)
+#print streams_audio
 
 # Potential for increasing if multi-streamed audio becomes prevalent. (DVDs/Blu-Ray)
 aacStreams = [x for x in streams_audio if x["codec"] == "aac"]
 ac3Streams = [x for x in streams_audio if x["codec"] == "ac3"]
 
 if len(ac3Streams) == 0:
-	ac3Streams = [x for x in streams_audio if x["codec"] == "dts"] # prefer AC3, otherwise do DTS/DCA. Most files will only have one.
+	ac3Streams = [x for x in streams_audio if x["codec"] == "dts"]
 if len(ac3Streams) == 0:
 	ac3Streams = [x for x in streams_audio if x["codec"] == "dca"]
 
 aac=0
 ac3=0
-
+#print fil
 if len(aacStreams)>0:
 	aac=aacStreams[0]
 if len(ac3Streams)>0:
 	ac3=ac3Streams[0]
 if len(ac3Streams)==0 or (ac3["channel_layout"]=="stereo" and aac!=0):
-	#no AC3 stream. See if we can convert that strange surround AAC to AC3.
+	#no AC3 stream. Can we do something?
 	try:
 		if aac["channel_layout"] == "surround":
 			newstr={}
@@ -113,7 +139,6 @@ if len(ac3Streams)==0 or (ac3["channel_layout"]=="stereo" and aac!=0):
 			ac3=newstr
 	except:
 		pass
-
 if aac==0 and ac3==0:
 	newstr={}
 	newstr["newcodec"]="aac"
@@ -142,8 +167,7 @@ if ac3 !=0:
 
 
 
-#build an ffmpeg command.
-
+#print streams_final
 numaudio=0
 video=1
 audio=0
@@ -157,22 +181,32 @@ for stream in streams_final:
 			ffmpeg.append("copy")
 			video=0
 		elif stream["newcodec"]=="h264":
+#			if fil.find("Brooklyn") != -1 or fil.find("Saturday") != -1 or fil.find("Gotham") != -1 or fil.find("Amazing") != -1:
+#				print "Scaling!"
+#				ffmpeg.append("-vf")
+#				ffmpeg.append("scale=-1:720")
 			ffmpeg.append("-c:v")
 			ffmpeg.append("libx264")
-			ffmpeg.append("-crf")
-			ffmpeg.append("20") #adjust this up/down depending on your percieved quality. 
+			if fil.find("Amazing") != -1 or fil.find("Survivor") != -1 or fil.find("Colbert") != -1 or fil.find("Trevor") != -1 or fil.find("Saturday") != -1:
+				print fil
+				print "22"
+				ffmpeg.append("-crf")
+				ffmpeg.append("23")
+			else:
+				ffmpeg.append("-crf")
+				ffmpeg.append("20")
 			ffmpeg.append("-level:v")
 			ffmpeg.append("4.1")
 			ffmpeg.append("-preset")
 			ffmpeg.append(preset)
-			ffmpeg.append("-bf") # these slow down encoding, but reduce file size pretty significantly.
+			ffmpeg.append("-bf")
 			ffmpeg.append("16")
 			ffmpeg.append("-b_strategy")
 			ffmpeg.append("2")
 			ffmpeg.append("-subq")
 			ffmpeg.append("10")
 		else: 
-			print("Unknown codec:"+stream["newcodec"])
+			print "Unknown codec:"+stream["newcodec"]
 			sys.exit(1)
 	elif stream["type"]=="audio":
 		if stream["newcodec"]=="aac":
@@ -180,10 +214,12 @@ for stream in streams_final:
 			ffmpeg.append("libfdk_aac")
 			ffmpeg.append("-ac:a:"+str(numaudio))
 			ffmpeg.append("2")
-			ffmpeg.append("-vbr")
-			ffmpeg.append("5")
-			#ffmpeg.append("-b:a:"+str(numaudio))
-			#ffmpeg.append("320k")
+#			ffmpeg.append("-vbr")
+#			ffmpeg.append("5")
+			ffmpeg.append("-metadata:s:a:"+str(numaudio))
+			ffmpeg.append("lang=eng")
+			ffmpeg.append("-b:a:"+str(numaudio))
+			ffmpeg.append("128k")
 			audio=1
 			numaudio=numaudio+1
 		elif stream["newcodec"]=="ac3":
@@ -193,64 +229,103 @@ for stream in streams_final:
 			ffmpeg.append("6")
 			ffmpeg.append("-b:a:"+str(numaudio))
 			ffmpeg.append("640k")
+			ffmpeg.append("-metadata:s:a:"+str(numaudio))
+			ffmpeg.append("lang=eng")
 			audio=1
 			numaudio=numaudio+1
 		elif stream["newcodec"]=="copy":
 			ffmpeg.append("-c:a:"+str(numaudio))
 			ffmpeg.append("copy")
+			ffmpeg.append("-metadata:s:a:"+str(numaudio))
+			ffmpeg.append("lang=eng")
 			numaudio=numaudio+1
 		else:
-			print("Unknown codec:"+stream["newcodec"])
+			print "Unknown codec:"+stream["newcodec"]
+#if len(subs_streams) > 0:
+#	ffmpeg.append("-scodec")
+#	ffmpeg.append("mov_text")
+#	for stream in subs_streams:
+#		ffmpeg.append("-map")
+#		ffmpeg.append("0:"+str(stream))
+
 ffmpeg.append("-movflags")
 ffmpeg.append("faststart")
+ffmpeg.append("-map_metadata")
+ffmpeg.append("-1")
+
+ffmpeg.append("-refs")
+ffmpeg.append("4")
+
+print subs_streams
+print subs_fd
+print ffmpeg
+
+def filenameFromType(type):
+	print type
+	if type == "srt":
+		return "/bin/subs/extractsrt.sh"
+	elif type == "pgssub":
+		return "/bin/subs/tosrt.sh"
+	elif type == "ass" or type == "ssa":
+		return "/bin/subs/ssa-to-srt.sh"
+	elif type == "vobsub" or type == "dvdsub":
+		return "/bin/subs/tosrt_vobsub.sh"
+
+if len(subs_fd)>0:
+	#we know the FD sub track, and the proper full subs:
+	subprocess.call([filenameFromType(subs_fd[0][1]),fil,str(subs_fd[0][0]),"eng.forced",str(uuid.uuid4())])
+	subprocess.call([filenameFromType(subs_streams[0][1]),fil,str(subs_streams[0][0]),"eng",str(uuid.uuid4())])
+else:
+	if len(subs_streams) > 0:
+		subprocess.call([filenameFromType(subs_streams[0][1]),fil,str(subs_streams[0][0]),"eng",str(uuid.uuid4())])
+
+#sys.exit()
+
 job={}
 job["path"]=fil
 job["opts"]=ffmpeg
 
+sb=subprocess.Popen(["/usr/bin/frames",fil], stdout=subprocess.PIPE)
+job["frames"]=int(sb.communicate()[0])
 
+from rq import Connection, Queue
+from redis import Redis
+
+redis_conn = Redis()
 
 head,tail=os.path.split(fil)
+redis_conn.set("transtat:"+tail, 0)
 
-
-if fil[-4:]==".mpg" or fil[-4:]==".vob": # These are usually OTA  recordings or DVD rips, which are in 1080i. There isn't a good way to test this. 
-	print("Deinterlacing!")
+if fil[-4:]==".mpg":
+	print "Deinterlacing!"
 	ffmpeg.append("-vf")
-	ffmpeg.append("yadif=0:-1:0")
+	if fil.find("Colbert") != -1 or fil.find("Saturday") != -1 or fil.find("Gotham") != -1 or fil.find("Amazing") != -1 or fil.find("Trevor") != -1 or fil.find("Survivor") != -1 or fil.find("Agents") != -1 or fil.find("Bang") != -1 or fil.find("Mercer") != -1:
+		ffmpeg.append("yadif=0:-1:0,scale=-1:720")
+		ffmpeg.append("-sws_flags")
+		ffmpeg.append("lanczos")
+		ffmpeg.append("-refs")
+		ffmpeg.append("9")
+	else:
+		ffmpeg.append("yadif=0:-1:0")
+		ffmpeg.append("-refs")
+		ffmpeg.append("4")
+print " ".join(ffmpeg)
 
-if len(subs_streams) > 0:
-	ffmpeg.append("-scodec")
-	ffmpeg.append("mov_text")
-	for stream in subs_streams:
-		ffmpeg.append("-map")
-		ffmpeg.append("0:"+str(stream))
-
-#uncomment these next few lines if you want to just run ffmpeg.
-
-
-#res=subprocess.call(["ffmpeg","-i",job["path"]]+job["opts"]+["out.mp4"])
-#if res != 0:
-#	print "FFMPEG FAILURE!"
-#else:
-#	shutil.move("out.mp4",job["path"]+".mp4")
-#	os.remove(job["path"])
-# exit()
-
-#Delete the rest of the file if you don't want to enqueue.
-
-# enqueue the file.
-redis_conn = Redis()
+#exit()
+#sb=subprocess.Popen(["/usr/bin/frames",fil], stdout=subprocess.PIPE)
+#print int(sb.communicate()[0])
 if video==0 and audio==0:
 	if fil[-4:]!=".mp4":
 		q = Queue('mux-core',connection=redis_conn)
 		job["opts"]=["-acodec","copy","-vcodec","copy"]
 		q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
-		print('Enqueued: '+ fil+" for Remux"+str(job))
+		print 'Enqueued: '+ fil+" for Remux"+str(job)		
 
 if video==1:
 	q = Queue('video-core',connection=redis_conn)
 	q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
-	print('Enqueued: '+ fil+" for Video"+str(job))
+	print 'Enqueued: '+ fil+" for Video"+str(job)
 elif audio!=0:
 	q = Queue('audio-core',connection=redis_conn)
 	q.enqueue_call('tasks.ffmpeg',args=(job,),timeout=360000)
-	print('Enqueued: '+ fil+" for Audio"+str(job))
+	print 'Enqueued: '+ fil+" for Audio"+str(job)

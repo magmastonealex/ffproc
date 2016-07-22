@@ -11,6 +11,7 @@ class Parser(object):
 	sub_streams = []
 	is_interlaced = False
 	file_format=""
+	duration = 0
 
 	def __init__(self, filename):
 		if(filename[0] != '/'):
@@ -36,6 +37,8 @@ class Parser(object):
 		self.video_stream = self.parse_video(self.ffprobe_dict)
 		self.audio_streams = self.parse_audio(self.ffprobe_dict)
 		self.sub_streams = self.parse_subs(self.ffprobe_dict)
+		self.file_format = self.ffprobe_dict["format"]["format_name"]
+		self.duration = int(self.ffprobe_dict["format"]["duration"])*1000
 
 	#Parses ffprobe_dict to create the video_stream object. Let this be called by the constructor!
 	def parse_video(self, ffprobe_dict):

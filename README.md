@@ -81,3 +81,14 @@ How-to
  - Run `rqinfo` to view each of the queues. You should see a number of jobs ready to run.
  - In the ffproc directory which has been cloned to the worker, run `rqworker -u redis://your.ip.master.here video audio remux`. You can remove or reorder the queues here if one of your workers, say, isn't powerful enough to transcode video.
  - The worker should start popping jobs off, transcoding, uploading the file into place, and removing the old one. Make sure the permissions are set correctly on the server-side!
+
+
+Still coming up
+----
+
+- [ ] Handle container/output options
+- [ ] Set worker path to media directories
+- [ ] Worker failure should re-queue somehow
+- [ ] Start work on improving the ffmpeg status update server
+- [ ] Write a simplistic frontend for the status update which shows current jobs, their speeds, worker status, etc.
+- [ ] Open an issue and let me know what *you* want to see here!

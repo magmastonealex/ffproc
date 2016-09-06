@@ -1,9 +1,12 @@
 FFProc
 ====
 
-*This project is currently undergoing a ground-up-rewrite. The new version is now in a usable state, but is still fairly experimental.*
+*This project is currently undergoing a ground-up-rewrite. This new version is now in a usable state, but is still fairly experimental.*
 
 This script allows you to transcode massive media libraries to a configurable final profile. The goal is to be easily extensible but simultaneously simple to use.
+
+It has sane defaults which allow you to pre-transcode media for, say, a Plex or Emby server, and have them do effectively no transcoding. FWIW, I can run a Plex server off an old Atom board limited only by bandwidth because I transcode everything in advance with these scripts.
+
 
 **BACK UP/COPY YOUR MEDIA BEFORE RUNNING THIS**. I haven't had any problem running this on my 2TB media library, but I can't guarantee this will hold true for you as well.
 
@@ -86,6 +89,7 @@ How-to
 Still coming up
 ----
 
+- [ ] Support running ffproc from somewhere else.
 - [ ] Handle container/output options
 - [ ] Set worker path to media directories
 - [ ] Worker failure should re-queue somehow

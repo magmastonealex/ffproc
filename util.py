@@ -7,17 +7,17 @@ class bcolors:
     ENDC = '\033[0m'
 
 class loglevels:
-	VERBOSE = 0
+	VERBOSE = 5
 	INFO = 1
 	WARNING = 2
 	ERROR = 3
 	CRITICAL = 4
-	level_colors = { VERBOSE : bcolors.ENDC, INFO : bcolors.OKBLUE, WARNING : bcolors.WARNING, ERROR : bcolors.FAIL, CRITICAL : bcolors.FAIL}
+	level_colors = { VERBOSE : bcolors.OKGREEN, INFO : bcolors.OKBLUE, WARNING : bcolors.WARNING, ERROR : bcolors.FAIL, CRITICAL : bcolors.FAIL}
 
 class Log:
 	@staticmethod
 	def v(tag,message):
-		level = loglevels.ERROR
+		level = loglevels.VERBOSE
 		Log.log(tag,message,level)
 	@staticmethod
 	def i(tag,message):

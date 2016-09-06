@@ -1,7 +1,9 @@
 """
 	This is the script to invoke across all of your media.
 
-	It will invoke a parser on the media, then parse the config file using regex if applicable to select a transcode profile, which is then passed to a transformer to turn it into Tasks, if applicable.
+
+	N.B: Regexes are parsed in decending order. IE, the first match wins. So your regexes should be from least to most specific.
+	It will invoke a parser on the media, then parse the config files using regex if applicable to select a transcode profile, which is then passed to a transformer to turn it into Tasks, if applicable.
 
 	The Tasks are then enqueued into Redis.
 
@@ -19,24 +21,74 @@ import json
 import transformer
 import sys
 import os
+import json
+import re
+from util import Log
 
 from parser import Parser
 from task import Task, TaskTypes
 
+TAG = "ffproc"
+
 redis_conn = Redis("10.154.60.11")
 
-#TODO: use argparse here
-startfilename = sys.argv[1]
-endfilename = ".".join(sys.argv[1].split(".")[:-1])+".mp4"
+
+parser = argparse.ArgumentParser(description='Enqueue media files for transcoding, using a variety of profiles.')
+parser.add_argument('--profile', help='Force a particular profile')
+parser.add_argument('--showcommand', action='store_true',help='(debug) Show the FFMPEG command used')
+parser.add_argument('--dryrun', action='store_true',help='(debug) Stop short of actually enqueing the file')
+
+parser.add_argument('file', metavar='file', type=str,
+                    help='The file to transcode')
+arguments = parser.parse_args()
+
+
+allprofiles = json.loads(open("profiles.json").read())
+
+
+startfilename = arguments.file
+endfilename = ".".join(arguments.file.split(".")[:-1])+".mp4"
 
 fileparsed = Parser(startfilename)
 
-thistask = transformer.ffmpeg_tasks_create(fileparsed,transformer.defaultoptions)
+
+
+profile = arguments.profile
+basefilename = os.path.basename(arguments.file)
+
+
+
+if profile == None:
+	regexes = json.loads(open("regexes.json").read())
+	for regex in regexes:
+		if re.match(regex["regex"], basefilename) != None:
+			profile = regex["profile"]
+			Log.v(TAG, "Got profile " + profile + " for " + basefilename)
+
+if profile == None:
+	#No regex matched either!
+	profile = "default"
+
+
+if profile not in allprofiles:
+	Log.e(TAG, "Profile " + profile+" does not exist!")
+	sys.exit()
+
+discoveredprofile = allprofiles[profile]
+#TODO: use argparse here
+
+
+thistask = transformer.ffmpeg_tasks_create(fileparsed,discoveredprofile)
 if thistask != None:
 	thistask.infile = startfilename
 	thistask.outfile = endfilename
-	print "Enqueing " + os.path.basename(startfilename) + " for " + thistask.tasktype
-	q = Queue(thistask.tasktype,connection=redis_conn)
-	q.enqueue_call("worker.ffmpeg", args=(str(thistask),),timeout=360000)
+	Log.i(TAG, "Enqueing " + os.path.basename(startfilename) + " for " + thistask.tasktype)
+	if arguments.showcommand == True:
+		Log.v(TAG, "ffmpeg command: " + " ".join(thistask.arguments))
+	if arguments.dryrun == False:
+		q = Queue(thistask.tasktype,connection=redis_conn)
+		q.enqueue_call("worker.ffmpeg", args=(str(thistask),),timeout=360000)
+	else:
+		Log.e(TAG, "Did not enqueue as per command line options")
 else:
-	print "No action needed for " + os.path.basename(startfilename)
+	Log.i(TAG, "No action needed for " + os.path.basename(startfilename))

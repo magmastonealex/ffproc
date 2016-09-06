@@ -1,0 +1,56 @@
+{
+"720p":{
+	"video": {
+		"deinterlace": "yes",
+		"allowhevc": true,
+		"ignore": false,
+		"codec": "h264",
+		"force": false,
+		"encodepreset": "veryslow",
+		"quality": "20",
+		"res": "720p"
+	},
+	"audio": {
+		"surround": {
+			"keep": true
+		},
+		"stereo": {
+			"keep": true,
+			"create": true,
+			"ffproc_filtering": true,
+			"bitrate": "128k",
+			"force_libfdk": true
+		}
+	},
+	"format": {
+		"filetype": "mp4"
+	}
+},
+"default":{
+	"video": {
+		"deinterlace": "yes",
+		"allowhevc": true,
+		"ignore": false,
+		"codec": "h264",
+		"force": false,
+		"encodepreset": "veryslow",
+		"quality": "20",
+		"res": "1080p"
+	},
+	"audio": {
+		"surround": {
+			"keep": true
+		},
+		"stereo": {
+			"keep": true,
+			"create": true,
+			"ffproc_filtering": true,
+			"bitrate": "128k",
+			"force_libfdk": true
+		}
+	},
+	"format": {
+		"filetype": "mp4"
+	}
+}
+}

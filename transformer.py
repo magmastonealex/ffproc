@@ -58,7 +58,7 @@ def media_transform(parser, options):
 	codec = "copy"
 	if cstream["codec"] != voptions["codec"] or voptions["force"] == True:
 		if voptions["allowhevc"] == True and cstream["codec"] == "hevc":
-			Log.i(TAG, "Skipping transcode for HVEC as per overrride.")
+			Log.i(TAG, "Skipping transcode for HVEC as per override.")
 		else:
 			tcodeVideo = True
 			Log.i(TAG, "Transcoding video track")

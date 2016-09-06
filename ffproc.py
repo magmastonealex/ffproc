@@ -1,3 +1,4 @@
+#! /usr/bin/python2
 """
 	This is the script to invoke across all of your media.
 

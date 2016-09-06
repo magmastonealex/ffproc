@@ -34,7 +34,7 @@ optional arguments:
   --dryrun           (debug) Stop short of actually enqueing the file
 ```
 
-This script needs to be run for every file in your library. I'd reccommend running `find /your/media/from/root -exec python2 ffproc.py --immediate {} \;` to do this.
+This script needs to be run for every file in your library. I'd reccommend running `find /your/media/from/root -exec ./ffproc.py --immediate {} \;` to do this.
 
 Before running it for the first time, I'd reccommend editing the `.json` files to fit your needs. Take a look at profiles.json for the format. Each option is described below.
 

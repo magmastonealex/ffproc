@@ -76,7 +76,8 @@ Requirements
 
 How-to
 ----
-	- Run ffproc over a subset of media to test it out. You may want to follow the above simpler directions until you find options that are suitable for you.
-	- Run `rqinfo` to view each of the queues. You should see a number of jobs ready to run.
-	- In the ffproc directory which has been cloned to the worker, run `rqworker -u redis://your.ip.master.here video audio remux`. You can remove or reorder the queues here if one of your workers, say, isn't powerful enough to transcode video.
-	- The worker should start popping jobs off, transcoding, uploading the file into place, and removing the old one. Make sure the permissions are set correctly on the server-side!
+
+ - Run ffproc over a subset of media to test it out. You may want to follow the above simpler directions until you find options that are suitable for you.
+ - Run `rqinfo` to view each of the queues. You should see a number of jobs ready to run.
+ - In the ffproc directory which has been cloned to the worker, run `rqworker -u redis://your.ip.master.here video audio remux`. You can remove or reorder the queues here if one of your workers, say, isn't powerful enough to transcode video.
+ - The worker should start popping jobs off, transcoding, uploading the file into place, and removing the old one. Make sure the permissions are set correctly on the server-side!

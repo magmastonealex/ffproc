@@ -15,8 +15,7 @@
 """
 
 import argparse
-from rq import Connection, Queue
-from redis import Redis
+
 import json
 import transformer
 import sys
@@ -30,11 +29,21 @@ from task import Task, TaskTypes
 
 TAG = "ffproc"
 
-redis_conn = Redis("10.154.60.11")
+useredis = True
+
+try:
+	from rq import Connection, Queue
+	from redis import Redis
+except:
+	useredis = False
+	Log.e(TAG, "rq and redis libraries not found. Disabling redis support...")
+
 
 
 parser = argparse.ArgumentParser(description='Enqueue media files for transcoding, using a variety of profiles.')
 parser.add_argument('--profile', help='Force a particular profile')
+parser.add_argument('--immediate', action='store_true',help="Don't use Redis, just run the transcode immediately")
+parser.add_argument('--redis', default="127.0.0.1",nargs=1,type=str,help="Redis IP address, if not localhost")
 parser.add_argument('--showcommand', action='store_true',help='(debug) Show the FFMPEG command used')
 parser.add_argument('--dryrun', action='store_true',help='(debug) Stop short of actually enqueing the file')
 
@@ -42,6 +51,8 @@ parser.add_argument('file', metavar='file', type=str,
                     help='The file to transcode')
 arguments = parser.parse_args()
 
+if arguments.immediate == True:
+	useredis = False
 
 allprofiles = json.loads(open("profiles.json").read())
 
@@ -82,13 +93,22 @@ thistask = transformer.ffmpeg_tasks_create(fileparsed,discoveredprofile)
 if thistask != None:
 	thistask.infile = startfilename
 	thistask.outfile = endfilename
+	thistask.forcefdk = discoveredprofile["audio"]["stereo"]["force_libfdk"]
 	Log.i(TAG, "Enqueing " + os.path.basename(startfilename) + " for " + thistask.tasktype)
 	if arguments.showcommand == True:
 		Log.v(TAG, "ffmpeg command: " + " ".join(thistask.arguments))
-	if arguments.dryrun == False:
-		q = Queue(thistask.tasktype,connection=redis_conn)
+	if arguments.dryrun == False and useredis == True:
+		redaddr = arguments.redis
+		if isinstance(redaddr, list):
+			redaddr = arguments.redis[0]
+		q = Queue(thistask.tasktype, connection=Redis(redaddr))
 		q.enqueue_call("worker.ffmpeg", args=(str(thistask),),timeout=360000)
 	else:
-		Log.e(TAG, "Did not enqueue as per command line options")
+		if arguments.dryrun == True:
+			Log.e(TAG, "Did not enqueue as per command line options")
+		else:
+			Log.e(TAG, "Running ffmpeg locally.")
+			import worker
+			worker.ffmpeg(str(thistask))
 else:
 	Log.i(TAG, "No action needed for " + os.path.basename(startfilename))

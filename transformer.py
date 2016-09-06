@@ -7,30 +7,28 @@ from task import Task,TaskTypes
 
 """
 	Options is the dictionary that determines *how* the parser is transformed.
-	It contains a series of qualities, with their settings, and one master object which maps files to qualities using regexes.
 	Qualities describe a file target.
-	First params are defaults.
 	video:
-		- ignore: true
+		- ignore: true - Just copy, we don't care about it.
 		- codec: h264/hevc - the codec to use
 		- allowhvec: true/false
 		- res: keep/720p/1080p/480p - the resolution to scale down to, if needed. if the video is around this, it won't be scaled to exact dimens.
-		- deinterlace yes/no/force - Deinterlace if ffproc thinks that it's interlaced, or force it to. 
-		- quality: 20 - the quality setting to use
-		- force: yes/no
+		- deinterlace true/false/force - Deinterlace if ffproc thinks that it's interlaced, or force it to. 
+		- quality: 20 - the crf quality setting to use
+		- force: true/false - Force the video to be transcoded, even if it's already in the right codec.
 		- encodepreset: veryslow/slow/fast/ultrafast - ffmpeg speed settings. Slower = equivalent quality, smaller file sizes.
 	audio:
 		surround:
-			- keep: yes/no - Keep the surround channel
+			- keep: true/false - Keep the surround channel
 		stereo:
-			- keep: yes/no - Keep the stereo channel that's already there
+			- keep: true/false - Keep the stereo channel that's already there
 			- create: yes - Create from surround
-			- ffproc_filtering - Use ffproc's filtergraph to make better stereo (less background noise, nightmode style filter to normalize volume.)
+			- ffproc_filtering - Use ffproc's filtergraph to make better stereo (less "background" noise, nightmode style filter to normalize volume for better listening with headphones or stereo speakers)
 			- bitrate 128k - don't go above this bitrate
-			- force_libfdk yes/no allow or disallow  
-	output:
+			- force_libfdk true/false - If this is false, the worker will change the libfdk_aac codec to aac if it does not have libfdk_aac installed. Will result in low-quality audio.  
+	output: (currently unused!)
 		- filetype matroska/mp4 - What output file format to use
-		- quickstart yes/no - Run a postprocessing step to enable mp4 quickstart.
+		- quickstart true/false - Run a postprocessing step to enable mp4 quickstart.
 """
 
 """

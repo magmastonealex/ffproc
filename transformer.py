@@ -2,8 +2,8 @@ from parser import Parser
 from util import Log
 from task import Task,TaskTypes
 
-#Pass in a Parser object.
-# This function will take that and turn it into an array of stream objects which are then turned into an ffmpeg command. Entry point is ffmpeg_task_create().
+# Transformer is the class that has the pretty difficult task of turning what the file *is* into what the file *should be*. This is fairly easy for video, but audio has complications, i.e. what if the source has surround but no stereo? What if stereo and surround, do you want to ovewrite the stereo sound? Note that language detection isn't done right now.
+
 
 """
 	Options is the dictionary that determines *how* the parser is transformed.
@@ -13,6 +13,7 @@ from task import Task,TaskTypes
 	video:
 		- ignore: true
 		- codec: h264/hevc - the codec to use
+		- allowhvec: true/false
 		- res: keep/720p/1080p/480p - the resolution to scale down to, if needed. if the video is around this, it won't be scaled to exact dimens.
 		- deinterlace yes/no/force - Deinterlace if ffproc thinks that it's interlaced, or force it to. 
 		- quality: 20 - the quality setting to use
@@ -33,13 +34,16 @@ from task import Task,TaskTypes
 """
 
 """
+	
+
+
 	Returns an array of transcode targets of the form:
 		- { type:video, index, codec, quality, scaling, deinterlacing}
 		- { type:audio, index, codec, bitrate, downconvert, customdownconvert}
 	These transcode targets can then be used to create an ffmpeg command line.
 """
 
-defaultoptions = { "video":{"deinterlace": "yes", "ignore":False, "codec": "h264","force":False, "encodepreset": "veryslow", "quality": "20", "res":"1080p"}, "audio":{"surround":{"keep":True},"stereo":{"keep": True,"create": True,"ffproc_filtering":True,"bitrate":"128k","force_libfdk":True}}, "format":{"filetype":"mp4"} }
+defaultoptions = { "video":{"deinterlace": "yes", "allowhevc": True, "ignore":False, "codec": "h264","force":False, "encodepreset": "veryslow", "quality": "20", "res":"1080p"}, "audio":{"surround":{"keep":True},"stereo":{"keep": True,"create": True,"ffproc_filtering":True,"bitrate":"128k","force_libfdk":True}}, "format":{"filetype":"mp4"} }
 TAG = "MediaTransformer"
 def media_transform(parser, options):
 
@@ -53,9 +57,12 @@ def media_transform(parser, options):
 
 	codec = "copy"
 	if cstream["codec"] != voptions["codec"] or voptions["force"] == True:
-		tcodeVideo = True
-		Log.i(TAG, "Transcoding video track")
-		codec = voptions["codec"]
+		if voptions["allowhevc"] == True and cstream["codec"] == "hevc":
+			Log.i(TAG, "Skipping transcode for HVEC as per overrride.")
+		else:
+			tcodeVideo = True
+			Log.i(TAG, "Transcoding video track")
+			codec = voptions["codec"]
 	else:
 		Log.i(TAG, "Copying video track")
 
@@ -140,7 +147,7 @@ def media_transform(parser, options):
 	tcode = tcodeVideo or tcodeAudio
 
 	remux = False
-	if not tcode and parser.file_format.find(options["format"]["filetype"]) != -1:
+	if not tcode and parser.file_format.find(options["format"]["filetype"]) == -1:
 		remux = True
 
 	audio_building.append(video_build)
@@ -153,6 +160,9 @@ def ffmpeg_tasks_create(parser, options):
 		return None
 	ffmpeg=[]
 	astreamindex = 0
+
+
+
 	for stream in streams["tcodeData"][::-1]:
 		
 		#Map the stream into the output. Order will be video, stereo, surround based on media_transform function, and iterating the list backwards.
@@ -234,4 +244,13 @@ def ffmpeg_tasks_create(parser, options):
 				ffmpeg.append("-ac:a:"+str(astreamindex))
 				ffmpeg.append("2")
 			astreamindex=astreamindex+1
-	return Task(tasktype=TaskTypes.VIDEO, command="ffmpeg", arguments=ffmpeg)
+
+
+	task_type = TaskTypes.REMUX
+
+	if streams["video"] == True:
+		task_type = TaskTypes.VIDEO
+	elif streams["audio"] == True:
+		task_type = TaskTypes.AUDIO
+
+	return Task(tasktype=task_type, command="ffmpeg", arguments=ffmpeg)

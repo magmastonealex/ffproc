@@ -2,6 +2,11 @@ import subprocess
 import json
 from util import Log
 
+
+"""
+	The Parser has the kind-of-difficult job of figuring out what the file contains. It uses ffprobe to create a series of arrays which describe any given file. Transformers take objects of this type.
+"""
+
 TAG = "parser"
 
 class Parser(object):
@@ -38,7 +43,7 @@ class Parser(object):
 		self.audio_streams = self.parse_audio(self.ffprobe_dict)
 		self.sub_streams = self.parse_subs(self.ffprobe_dict)
 		self.file_format = self.ffprobe_dict["format"]["format_name"]
-		self.duration = int(self.ffprobe_dict["format"]["duration"])*1000
+		self.duration = float(self.ffprobe_dict["format"]["duration"])
 
 	#Parses ffprobe_dict to create the video_stream object. Let this be called by the constructor!
 	def parse_video(self, ffprobe_dict):
@@ -67,7 +72,7 @@ class Parser(object):
 				try:
 					language_found = stream["tags"]["language"]
 				except:
-					Log.v(TAG, "Could not find a language for stream " + stream["index"])
+					Log.v(TAG, "Could not find a language for stream " + str(stream["index"]))
 				audio_streams.append({"index": stream["index"], "codec": stream["codec_name"], "channels": stream["channels"], "language": language_found})
 		return audio_streams
 
@@ -81,7 +86,7 @@ class Parser(object):
 				try:
 					language_found = stream["tags"]["language"]
 				except:
-					Log.v(TAG, "Could not find a language for stream " + stream["index"])
+					Log.v(TAG, "Could not find a language for stream " + str(stream["index"]))
 				# number of frames or bitrate is the best way to figure out the difference between secondary (ie foreign langauge/ forced) and primary (all text) captions.
 				# There is likely a better way... still need to find it.
 				br = None

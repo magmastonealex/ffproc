@@ -17,15 +17,15 @@ class Task:
 	infile = ""
 	outfile = ""
 
-	def __init__(self,constructfrom=None,tasktype=TaskTypes.NONE,command="echo",arguments=[],infile="",outfile=""):
-		if constructfrom == None:
+	def __init__(self,createfrom=None,tasktype=TaskTypes.NONE,command="echo",arguments=[],infile="",outfile=""):
+		if createfrom == None:
 			self.tasktype = tasktype
 			self.command = command
 			self.arguments = arguments
 			self.infile = infile
 			self.outfile = outfile
 		else:
-			obj = json.loads(constructfrom)
+			obj = json.loads(createfrom)
 			self.tasktype = obj["type"]
 			self.command = obj["command"]
 			self.arguments = obj["arguments"]

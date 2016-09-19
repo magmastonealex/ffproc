@@ -26,7 +26,7 @@ def ffmpeg(arg):
 		print "FFMPEG FAILED"
 	else:
 		shutil.move("tmp.mp4",torun.outfile)
-		os.remove(path)
+		os.remove(torun.infile)
 
 	try:
 		os.remove("tmp.mp4")

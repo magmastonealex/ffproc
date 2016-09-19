@@ -89,10 +89,10 @@ How-to
 Still coming up
 ----
 
-- [ ] Support running ffproc from somewhere else.
-- [ ] Handle container/output options
-- [ ] Set worker path to media directories
+- [ ] Support running ffproc from somewhere else. (Right now you must be in the ffproc directory to execute it. I'm not sure how Python handles non-system library importing, and finding the path to files like settings.json)
+- [ ] Handle container/output options (Right now it's ignored, just always set to MP4 with quickstart)
+- [ ] Set worker path to media directories (So that you can have workers which have mounted the media folders somewhere other than the same paths as the master)
 - [ ] Worker failure should re-queue somehow
-- [ ] Start work on improving the ffmpeg status update server
-- [ ] Write a simplistic frontend for the status update which shows current jobs, their speeds, worker status, etc.
+- [ ] Start work on improving the ffmpeg status update server (It's not the most reliable thing in the world)
+- [ ] Write a simplistic frontend for the status update which shows current jobs, their speeds, worker status, etc. (This is a fairly large-scale task)
 - [ ] Open an issue and let me know what *you* want to see here!

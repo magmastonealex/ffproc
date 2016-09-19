@@ -21,14 +21,14 @@ class Parser(object):
 	def __init__(self, filename):
 		if(filename[0] != '/'):
 			Log.w(TAG, "Filename is not absolute, this may cause issues dispatching jobs.")
-		ffprobe = subprocess.Popen(["/usr/bin/ffprobe","-v", "quiet", "-print_format", "json", "-show_format", "-show_streams",filename], stdout=subprocess.PIPE)
+		ffprobe = subprocess.Popen(["ffprobe","-v", "quiet", "-print_format", "json", "-show_format", "-show_streams",filename], stdout=subprocess.PIPE)
 		#Get everything from stdout once ffprobe exits, and
 		try:
 			ffprobe_string = ffprobe.communicate()[0]
 			self.ffprobe_dict=json.loads(ffprobe_string)
 		except ValueError:
 			Log.e(TAG, "File could not be read, are you sure it exists?")
-		ffmpeg_interlace = subprocess.Popen(["/usr/bin/ffmpeg", "-filter:v", "idet", "-frames:v", "400", "-an", "-f", "rawvideo", "-y", "/dev/null", "-i", filename],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		ffmpeg_interlace = subprocess.Popen(["ffmpeg", "-filter:v", "idet", "-frames:v", "400", "-an", "-f", "rawvideo", "-y", "/dev/null", "-i", filename],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		interlaced_details = ffmpeg_interlace.communicate()[1]
 		interlaced_lines = interlaced_details.split("\n")
 		num_progressive = 0

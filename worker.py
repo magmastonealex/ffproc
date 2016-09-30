@@ -32,3 +32,19 @@ def ffmpeg(arg):
 		os.remove("tmp.mp4")
 	except:
 		pass
+
+def subtitles(arg):
+	
+	torun = Task(createfrom=arg)
+
+	out=subprocess.call([torun.command,torun.infile]+torun.arguments+["out.srt"])
+	if not out == 0:
+		print "SUBTITLES FAILED"
+	else:
+		shutil.move("out.srt",torun.outfile)
+		os.remove(torun.infile)
+
+	try:
+		os.remove("out.srt")
+	except:
+		pass

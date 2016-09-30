@@ -8,6 +8,8 @@ from task import Task,TaskTypes
 
 """
 	Returns an array of incomplete Tasks. Infile and outfile must still be populated.
+
+	TODO: Multiple language support. Should not be too difficult, but I have no need right now.
 """
 
 def subs_transform(parser, options):
@@ -21,15 +23,17 @@ def subs_transform(parser, options):
 		if sub["language"] == "eng" or sub["language"] == "und":
 			if sub["numframes"] > bestsub["numframes"]:
 				bestsub = sub
-	return [Task(tasktype=TaskTypes.SUBTITLE, command=filenameFromType(bestsub["codec"]), arguments=[bestsub["index"]])]
-
+	if "codec" in bestsub:
+		return [Task(tasktype=TaskTypes.SUBTITLE, command=filenameFromType(bestsub["codec"]), arguments=[bestsub["index"]])]
+	else:
+		return []
 #returns the subtitle script to use in order to extract everything. There's usually a fair number of steps involved for each one, so they are implemented as shell scripts.
 def filenameFromType(type):
 	if type == "srt":
-		return "subs/extractsrt.sh"
+		return "subs/srt.sh"
 	elif type == "pgssub":
-		return "subs/tosrt.sh"
+		return "subs/pgssub.sh"
 	elif type == "ass" or type == "ssa":
-		return "subs/ssa-to-srt.sh"
+		return "subs/ssa.sh"
 	elif type == "vobsub" or type == "dvdsub":
-		return "subs/tosrt_vobsub.sh"
+		return "subs/vob.sh"

@@ -27,6 +27,7 @@ from util import Log
 
 from parser import Parser
 from task import Task, TaskTypes
+from subtitles import subs_transform
 
 TAG = "ffproc"
 
@@ -91,6 +92,14 @@ discoveredprofile = allprofiles[profile]
 
 
 thistask = transformer.ffmpeg_tasks_create(fileparsed,discoveredprofile)
+subtasks = subs_transform(fileparsed,discoveredprofile)
+
+#We execute subtitle tasks first, and always on this host. We can't count on platform or tool availability for all workers.
+if len(subtasks) > 0:
+	import worker
+	worker.subtitles(str(thistask))
+
+
 if thistask != None:
 	thistask.infile = startfilename
 	thistask.outfile = endfilename

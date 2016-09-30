@@ -22,6 +22,9 @@
 			"force_libfdk": true
 		}
 	},
+	"subtitles":{
+		"keep": true
+	},
 	"format": {
 		"filetype": "mp4"
 	}
@@ -36,6 +39,9 @@
 		"encodepreset": "veryslow",
 		"quality": "20",
 		"res": "1080p"
+	},
+	"subtitles":{
+		"keep": true
 	},
 	"audio": {
 		"surround": {

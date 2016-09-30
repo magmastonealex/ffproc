@@ -67,6 +67,15 @@ You can use the `--profile` option to force a particular profile.
 
 `regexes.json` is a more advanced feature allowing you to customize which files get which preset, especially useful if you do a nightly run of ffproc.
 
+Subtitles
+====
+ffproc has the ability to detect, process, and extract subtitles of effectively all types regularly seen (pgssub, ssa, srt, vobsub). It needs a handful of external tools, some are found in repositories, others need manual compiling.
+- `mkvextract`
+- `xvfb` - Virtual framebuffer, some other tools try to open X even in non-graphical mode.
+- `vobsub2srt` - Performs OCR to turn image subtitle formats into SRT. Very accurate.
+- `bdsup2subpp` - Definitely need to compile this one. Tool used to turn PGS subtitles into VOBSUB format.
+
+
 Advanced Usage (queuing)
 ====
 

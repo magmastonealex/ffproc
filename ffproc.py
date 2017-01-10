@@ -23,6 +23,9 @@ import sys
 import os
 import json
 import re
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'lib/'))
+
 from util import Log
 
 from parser import Parser

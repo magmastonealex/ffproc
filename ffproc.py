@@ -24,11 +24,11 @@ import os
 import json
 import re
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'lib/'))
+sys.path.insert(0, os.path.dirname(__file__))
 
 from util import Log
 
-from parser import Parser
+from MediaParser import Parser
 from task import Task, TaskTypes
 
 TAG = "ffproc"

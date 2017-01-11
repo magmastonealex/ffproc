@@ -1,4 +1,4 @@
-from parser import Parser
+from MediaParser import Parser
 from util import Log
 from task import Task,TaskTypes
 

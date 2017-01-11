@@ -16,10 +16,11 @@ def ffmpeg(arg):
 			print "Server has disabled workers without libfdk_aac!"
 			sys.exit()
 		else:
-			libfdk_pos = torun.arguments.find("libfdk_aac")
-			torun.arguments[libfdk_pos] = "aac"
-			torun.arguments.append("-strict")
-			torun.arguments.append("-2")
+			if "libfdk_aac" in torun.arguments:
+				libfdk_pos = torun.arguments.index("libfdk_aac")
+				torun.arguments[libfdk_pos] = "aac"
+				torun.arguments.append("-strict")
+				torun.arguments.append("-2")
 
 	out=subprocess.call(["ffmpeg","-i", torun.infile]+torun.arguments+["tmp.mp4"])
 	if not out == 0:

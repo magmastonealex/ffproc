@@ -28,7 +28,7 @@ class Parser(object):
 			self.ffprobe_dict=json.loads(ffprobe_string)
 		except ValueError:
 			Log.e(TAG, "File could not be read, are you sure it exists?")
-		ffmpeg_interlace = subprocess.Popen(["ffmpeg", "-filter:v", "idet", "-frames:v", "400", "-an", "-f", "rawvideo", "-y", "/dev/null", "-i", filename],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		ffmpeg_interlace = subprocess.Popen(["ffmpeg", "-filter:v", "idet", "-frames:v", "400", "-an", "-f", "null", "-", "-i", filename],stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		interlaced_details = ffmpeg_interlace.communicate()[1]
 		interlaced_lines = interlaced_details.split("\n")
 		num_progressive = 0

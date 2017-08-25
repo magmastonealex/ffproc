@@ -46,7 +46,34 @@
 			"create": true,
 			"ffproc_filtering": true,
 			"bitrate": "128k",
-			"force_libfdk": true
+			"force_libfdk": false
+		}
+	},
+	"format": {
+		"filetype": "mp4"
+	}
+},
+"tox265":{
+	"video": {
+		"deinterlace": "yes",
+		"allowhevc": true,
+		"ignore": false,
+		"codec": "hevc",
+		"force": false,
+		"encodepreset": "veryslow",
+		"quality": "20",
+		"res": "1080p"
+	},
+	"audio": {
+		"surround": {
+			"keep": true
+		},
+		"stereo": {
+			"keep": true,
+			"create": true,
+			"ffproc_filtering": true,
+			"bitrate": "128k",
+			"force_libfdk": false
 		}
 	},
 	"format": {

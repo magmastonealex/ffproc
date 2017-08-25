@@ -201,6 +201,8 @@ def ffmpeg_tasks_create(parser, options):
 				ffmpeg.append("libx265")
 				ffmpeg.append("-crf")
 				ffmpeg.append(options["video"]["quality"])
+				ffmpeg.append("-preset")
+				ffmpeg.append(options["video"]["encodepreset"])
 			else:
 				Log.e(TAG, "Unknown codec selected, you're on your own!")
 				ffmpeg.append(stream["codec"])

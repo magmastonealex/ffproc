@@ -1,14 +1,12 @@
 FFProc
 ====
 
-*This project is currently undergoing a ground-up-rewrite. This new version is now in a usable state, but is still fairly experimental.*
-
-This script allows you to transcode massive media libraries to a configurable final profile. The goal is to be easily extensible but simultaneously simple to use.
+This script allows you to transcode massive media libraries to a configurable final profile. The goal is to be easily extensible but simultaneously simple to use. It will only transcode where required, unlike many other scripts out there. This saves on time when your compute resources are limited.
 
 It has sane defaults which allow you to pre-transcode media for, say, a Plex or Emby server, and have them do effectively no transcoding. FWIW, I can run a Plex server off an old Atom board limited only by bandwidth because I transcode everything in advance with these scripts.
 
 
-**BACK UP/COPY YOUR MEDIA BEFORE RUNNING THIS**. I haven't had any problem running this on my 2TB media library, but I can't guarantee this will hold true for you as well.
+**BACK UP/COPY YOUR MEDIA BEFORE RUNNING THIS**. I haven't had any problem running this on my 6TB media library, but I can't guarantee this will hold true for you as well.
 
 One of the reasons I wrote `ffproc` was to be able to distribute my transcoding workload over multiple machines. This does, however, require more setup. For a basic setup, without any sort of enqueing, all you need is ffmpeg installed. I'd highly reccommend installing or compiling a version with 'libfdk_aac' in it, because it results in much clearer-sounding audio compared to the stock aac encoder.
 
@@ -43,7 +41,8 @@ Qualities describe a file target.
 	video:
 		- ignore: true - Just copy, we don't care about it.
 		- codec: h264/hevc - the codec to use
-		- allowhvec: true/false
+		- allowhvec: true/false - Don't bother transcoding hevc.
+		- 10bit - Use 10 bit video encoding (helps color banding, only reccomended with x265)
 		- res: keep/720p/1080p/480p - the resolution to scale down to, if needed. if the video is around this, it won't be scaled to exact dimens.
 		- deinterlace true/false/force - Deinterlace if ffproc thinks that it's interlaced, or force it to. 
 		- quality: 20 - the crf quality setting to use
@@ -58,6 +57,9 @@ Qualities describe a file target.
 			- ffproc_filtering - Use ffproc's filtergraph to make better stereo (less "background" noise, nightmode style filter to normalize volume for better listening with headphones or stereo speakers)
 			- bitrate 128k - don't go above this bitrate
 			- force_libfdk true/false - If this is false, the worker will change the libfdk_aac codec to aac if it does not have libfdk_aac installed. Will result in low-quality audio.  
+		lang:
+			- ignore: true/false - Ignore language tags, just take the best audio track available (this may result in weird behaviour if you have descriptive audio)
+			- allowed: array - Allowed languages. Ignore all other audio tracks.
 	output: (currently unused!)
 		- filetype matroska/mp4 - What output file format to use
 		- quickstart true/false - Run a postprocessing step to enable mp4 quickstart.

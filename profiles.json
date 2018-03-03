@@ -61,7 +61,8 @@
 		"codec": "hevc",
 		"force": false,
 		"encodepreset": "veryslow",
-		"quality": "20",
+		"quality": "23",
+		"10bit": true,
 		"res": "1080p"
 	},
 	"audio": {

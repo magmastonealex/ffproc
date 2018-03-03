@@ -47,6 +47,10 @@
 			"ffproc_filtering": true,
 			"bitrate": "128k",
 			"force_libfdk": false
+		},
+		"lang": {
+			"ignore": false,
+			"allowed": ["eng", "engm"]
 		}
 	},
 	"format": {

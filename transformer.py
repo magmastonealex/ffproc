@@ -11,7 +11,8 @@ from task import Task,TaskTypes
 	video:
 		- ignore: true - Just copy, we don't care about it.
 		- codec: h264/hevc - the codec to use
-		- allowhvec: true/false
+		- allowhvec: true/false - Don't bother transcoding hevc.
+		- 10bit - Use 10 bit video encoding (helps color banding, only reccomended with x265)
 		- res: keep/720p/1080p/480p - the resolution to scale down to, if needed. if the video is around this, it won't be scaled to exact dimens.
 		- deinterlace true/false/force - Deinterlace if ffproc thinks that it's interlaced, or force it to. 
 		- quality: 20 - the crf quality setting to use
@@ -26,6 +27,9 @@ from task import Task,TaskTypes
 			- ffproc_filtering - Use ffproc's filtergraph to make better stereo (less "background" noise, nightmode style filter to normalize volume for better listening with headphones or stereo speakers)
 			- bitrate 128k - don't go above this bitrate
 			- force_libfdk true/false - If this is false, the worker will change the libfdk_aac codec to aac if it does not have libfdk_aac installed. Will result in low-quality audio.  
+		lang:
+			- ignore: true/false - Ignore language tags, just take the best audio track available (this may result in weird behaviour if you have descriptive audio)
+			- allowed: array - Allowed languages. Ignore all other audio tracks.
 	output: (currently unused!)
 		- filetype matroska/mp4 - What output file format to use
 		- quickstart true/false - Run a postprocessing step to enable mp4 quickstart.
@@ -109,10 +113,19 @@ def media_transform(parser, options):
 	audio_master = {"channels": 0, 'language':'und'}
 	audio_stereo = None
 
+	ignore_language = False
+	valid_laguages = ["eng"]
+
+	if "lang" in aoptions:
+		if "ignore" in aoptions["lang"] and aoptions["lang"]["ignore"] == True:
+			ignore_language = True
+		if "allowed" in aoptions["lang"]:
+			valid_languages = aoptions["lang"]["allowed"]
+	
 	#this feels naieve. Take a closer look at this!
 	for track in parser.audio_streams:
 
-		if ( track["language"] == "eng" or track["language"] == "und" or track["language"] == None):
+		if ignore_language or ( track["language"] in valid_languages or track["language"] == "und" or track["language"] == None):
 			if track["channels"] > audio_master["channels"]:
 				audio_master = track
 			if track["channels"] < 6:
@@ -135,7 +148,7 @@ def media_transform(parser, options):
 		else:
 			tcodeAudio = True
 			Log.i(TAG, "Transcoding existing stereo audio")
-			audio_building.append({"type":"audio","index":audio_master["index"], "codec": "aac", "bitrate": aoptions["stereo"]["bitrate"],"downconvert":False, "forcefdk":aoptions["stereo"]["force_libfdk"],"ffprocdown":False})
+			audio_building.append({"type":"audio","index":audio_stereo["index"], "codec": "aac", "bitrate": aoptions["stereo"]["bitrate"],"downconvert":False, "forcefdk":aoptions["stereo"]["force_libfdk"],"ffprocdown":False})
 
 	#Create from surround.
 	if surround_exists and (not stereo_exists or aoptions["stereo"]["keep"] == False) and aoptions["stereo"]["create"] == True:

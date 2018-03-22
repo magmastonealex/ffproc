@@ -218,6 +218,9 @@ def ffmpeg_tasks_create(parser, options):
 				ffmpeg.append(options["video"]["quality"])
 				ffmpeg.append("-preset")
 				ffmpeg.append(options["video"]["encodepreset"])
+				# fix for #16. Allows Apple devices to play hevc result files.
+				ffmpeg.append("-tag:v")
+				ffmpeg.append("hvc1")
 			else:
 				Log.e(TAG, "Unknown codec selected, you're on your own!")
 				ffmpeg.append(stream["codec"])

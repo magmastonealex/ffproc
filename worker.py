@@ -8,6 +8,11 @@ def ffmpeg(arg):
 	
 	torun = Task(createfrom=arg)
 
+	# Get the output file extension:
+	destExtension = torun.outfile.split(".")[-1]
+	print torun.outfile.split(".")
+	tmpfile = "tmp." + destExtension
+
 	codeccheck = subprocess.Popen(["ffmpeg", "-codecs"], stdout=subprocess.PIPE)
 	allcodecs = codeccheck.communicate()[0]
 	if allcodecs.find("libfdk_aac") == -1:
@@ -22,14 +27,14 @@ def ffmpeg(arg):
 				torun.arguments.append("-strict")
 				torun.arguments.append("-2")
 
-	out=subprocess.call(["ffmpeg","-i", torun.infile]+torun.arguments+["tmp.mp4"])
+	out=subprocess.call(["ffmpeg","-i", torun.infile]+torun.arguments+[tmpfile])
 	if not out == 0:
 		print "FFMPEG FAILED"
 	else:
-		shutil.move("tmp.mp4",torun.outfile)
+		shutil.move(tmpfile,torun.outfile)
 		os.remove(torun.infile)
 
 	try:
-		os.remove("tmp.mp4")
+		os.remove(tmpfile)
 	except:
 		pass

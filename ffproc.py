@@ -62,16 +62,12 @@ allprofiles = json.loads(open("profiles.json").read())
 
 
 startfilename = arguments.file
-endfilename = ".".join(arguments.file.split(".")[:-1])+".mp4"
+
 
 fileparsed = Parser(startfilename)
 
-
-
 profile = arguments.profile
 basefilename = os.path.basename(arguments.file)
-
-
 
 if profile == None:
 	regexes = json.loads(open("regexes.json").read())
@@ -84,14 +80,18 @@ if profile == None:
 	#No regex matched either!
 	profile = "default"
 
-
 if profile not in allprofiles:
 	Log.e(TAG, "Profile " + profile+" does not exist!")
 	sys.exit()
 
 discoveredprofile = allprofiles[profile]
-#TODO: use argparse here
 
+extension = "mp4"
+
+if discoveredprofile["format"]["filetype"] == "matroska":
+	extension = "mkv"
+
+endfilename = ".".join(arguments.file.split(".")[:-1] + [extension])
 
 thistask = transformer.ffmpeg_tasks_create(fileparsed,discoveredprofile)
 if thistask != None:

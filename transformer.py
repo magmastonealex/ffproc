@@ -173,9 +173,6 @@ def ffmpeg_tasks_create(parser, options):
 		return None
 	ffmpeg=[]
 	astreamindex = 0
-
-
-
 	for stream in streams["tcodeData"][::-1]:
 		
 		#Map the stream into the output. Order will be video, stereo, surround based on media_transform function, and iterating the list backwards.
@@ -265,8 +262,10 @@ def ffmpeg_tasks_create(parser, options):
 				ffmpeg.append("2")
 			astreamindex=astreamindex+1
 
-	ffmpeg.append("-movflags")
-	ffmpeg.append("+faststart")
+	if options["format"]["filetype"] == "mp4":
+		ffmpeg.append("-movflags")
+		ffmpeg.append("+faststart")
+
 	ffmpeg.append("-map_metadata")
 	ffmpeg.append("-1")
 

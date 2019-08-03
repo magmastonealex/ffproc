@@ -12,11 +12,15 @@ endif
 ## Top-level targets
 
 .PHONY: default
-default: .venv
+default: .venv/$(PYTHON_BIN_DIR)/rq$(PYTHON_EXT)
 	.venv/$(PYTHON_BIN_DIR)/python$(PYTHON_EXT) ffproc.py -h
 
 
 ## Real targets
+
+.venv/$(PYTHON_BIN_DIR)/rq$(PYTHON_EXT): .venv setup.py requirements.txt
+	.venv/$(PYTHON_BIN_DIR)/pip install -r requirements.txt
+	touch "$(@)"
 
 .venv:
 	virtualenv "$(@)"

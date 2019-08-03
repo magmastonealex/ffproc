@@ -26,4 +26,7 @@ setuptools.setup(
         "Natural Language :: English",
         "Topic :: Multimedia :: Video :: Conversion",
     ],
+    install_requires=[
+        'rq', 'redis',
+    ]
 )

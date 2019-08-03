@@ -23,7 +23,7 @@ class FFMpegReceiver(object):
         self.sock.listen(5)
         while True:
             client, address = self.sock.accept()
-            print "accepting"
+            print("accepting")
             client.settimeout(60)
             threading.Thread(target = self.listenToFFmpeg,args = (client,address)).start()
 
@@ -41,7 +41,7 @@ class FFMpegReceiver(object):
             while found == False:
                 bstring = bstring + client.recv(1)
                 found = bstring.find("progress=continue") != -1
-            #print bstring
+            #print(bstring)
             data=bstring.split("\n")
             dataDict={}
             for d in data:
@@ -49,7 +49,7 @@ class FFMpegReceiver(object):
                 if d.find("=") != -1:
                     kv = d.split("=")
                     dataDict[kv[0].strip()]=kv[1].strip()
-            #print dataDict
+            #print(dataDict)
             self.tdb.put("tcode:"+jid+":progress:out_time",dataDict["out_time_ms"])
             self.tdb.put("tcode:"+jid+":progress:fps",dataDict["fps"])
             self.tdb.put("tcode:"+jid+":progress:speed",dataDict["speed"])

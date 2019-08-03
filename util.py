@@ -40,4 +40,4 @@ class Log:
     def log(fromModule, message, level):
         minLevel = 0
         if level > minLevel:
-            print loglevels.level_colors[level] + "["+fromModule+"] "+ message + bcolors.ENDC
+            print(loglevels.level_colors[level] + "["+fromModule+"] "+ message + bcolors.ENDC)

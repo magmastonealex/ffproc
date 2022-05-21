@@ -94,10 +94,10 @@ def media_transform(parser, options):
 			Log.i(TAG, "Scaling video (will cause transcode!)")
 			codec = voptions["codec"]
 			scaleopts = dres
-        bit10 = False
-        if "10bit" in voptions:
-            bit10 = voptions["10bit"]
-        video_build = {"type":"video", "index":cstream["index"], "codec": codec, "quality": voptions["quality"], "deinterlacing": deinterlace, "scaleopts": scaleopts, "10bit": bit10}
+		bit10 = False
+		if "10bit" in voptions:
+			bit10 = voptions["10bit"]
+		video_build = {"type":"video", "index":cstream["index"], "codec": codec, "quality": voptions["quality"], "deinterlacing": deinterlace, "scaleopts": scaleopts, "10bit": bit10}
 	if options["video"]["ignore"] == True:
 		Log.w(TAG, "Ignoring incorrect video codec")
 		video_build = {"type":"video", "index":cstream["index"], "codec": "copy", "quality": "10", "deinterlacing": False, "scaleopts": False}
@@ -221,9 +221,9 @@ def ffmpeg_tasks_create(parser, options):
 			else:
 				Log.e(TAG, "Unknown codec selected, you're on your own!")
 				ffmpeg.append(stream["codec"])
-                        if stream['10bit']:
-                                ffmpeg.append("-pix_fmt")
-                                ffmpeg.append("yuv420p10le")
+			if stream['10bit']:
+				ffmpeg.append("-pix_fmt")
+				ffmpeg.append("yuv420p10le")
 			if stream["scaleopts"] != False and stream["deinterlacing"] == True:
 				#Scaling and deinterlacing
 				ffmpeg.append("-vf")

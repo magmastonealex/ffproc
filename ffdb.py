@@ -1,6 +1,6 @@
 class DB:
 	def put(self,key,value):
-		print "PUT: " +key+" "+ value
+		print("PUT: " +key+" "+ value)
 		pass
 	def get(self,key):
 		pass

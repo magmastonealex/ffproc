@@ -23,7 +23,7 @@ class FFMpegReceiver(object):
 		self.sock.listen(5)
 		while True:
 			client, address = self.sock.accept()
-			print "accepting"
+			print("accepting")
 			client.settimeout(60)
 			threading.Thread(target = self.listenToFFmpeg,args = (client,address)).start()
 

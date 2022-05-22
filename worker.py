@@ -14,7 +14,7 @@ def ffmpeg(arg):
 	tmpfile = "tmp." + destExtension
 
 	codeccheck = subprocess.Popen(["ffmpeg", "-codecs"], stdout=subprocess.PIPE)
-	allcodecs = codeccheck.communicate()[0]
+	allcodecs = codeccheck.communicate()[0].decode('utf-8')
 	if allcodecs.find("libfdk_aac") == -1:
 		print("Install libfdk_aac for better audio quality!")
 		if torun.forcefdk == True:
@@ -32,6 +32,11 @@ def ffmpeg(arg):
 		print("FFMPEG FAILED")
 	else:
 		shutil.move(tmpfile,torun.outfile)
+		# To-do: de-hackify this.
+		try:
+			subprocess.call(["/usr/share/ffproc/completed", torun.outfile])
+		except:
+			pass
 		os.remove(torun.infile)
 
 	try:
